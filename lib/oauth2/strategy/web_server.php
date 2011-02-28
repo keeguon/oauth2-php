@@ -17,7 +17,7 @@ class WebServer extends Base
   */
   public function get_access_token($code, $options = array())
   {
-    $response = $this->getClient()->request('post', $this->getClient()->getAccessTokenUrl(), $this->access_token_params($code, $options));
+    $response = $this->getClient()->request('POST', $this->getClient()->getAccessTokenUrl(), $this->access_token_params($code, $options));
     
     $params = json_decode($response);
     
