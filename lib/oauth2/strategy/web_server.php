@@ -6,7 +6,7 @@ class WebServer extends Base
 {
   public function authorize_params($options = array())
   {
-    parent::authorize_params(array_merge($options, array('type' => 'web_server')));
+    return parent::authorize_params(array_merge($options, array('type' => 'web_server')));
   }
   
  /**
@@ -24,7 +24,15 @@ class WebServer extends Base
     $access = $params['access_token'];
     $refresh = $params['refresh_token'];
     $expires_in = $params['expires_in'];
-    OAuth2::AccessToken($this->getClient(), $access, $refresh, $expires_in, $params)
+    return new OAuth2\AccessToken($this->getClient(), $access, $refresh, $expires_in, $params);
+  }
+  
+  public function access_token_params($code, $options = array())
+  {
+    return parent::access_token_params(array_merge($options, array(
+      'type' => 'web_server',
+      'code' => $code
+    )));
   }
 }
 
