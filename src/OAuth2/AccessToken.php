@@ -132,4 +132,31 @@ class AccessToken
   {
     $this->params = $params;
   }
+  
+  public function request($verb, $path, $params = array(), $headers = array())
+  {
+    $params  = array_merge($params, $this->getParams());
+    $headers = array_merge($headers, array('Authorization' => 'OAuth ${$this->getToken()}'));
+    return $this->getClient()->request($verb, $path, $params, $headers);
+  }
+  
+  public function get($path, $params = array(), $headers = array())
+  {
+    return $this->request('GET', $path, $params, $headers);
+  }
+  
+  public function post($path, $params = array(), $headers = array())
+  {
+    return $this->request('POST', $path, $params, $headers);
+  }
+  
+  public function put($path, $params = array(), $headers = array())
+  {
+    return $this->request('PUT', $path, $params, $headers);
+  }
+  
+  public function delete($path, $params = array(), $headers = array())
+  {
+    return $this->request('DELETE', $path, $params, $headers);
+  }
 }
