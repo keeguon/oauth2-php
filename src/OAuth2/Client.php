@@ -116,13 +116,17 @@ class Client
   
   public function authorize_url($params = null)
   {
-    $path = $this->options['authorize_url'] || $this->options['authorize_path'] || "/oauth/authorize";
+    $path =  ($this->options['authorize_url']) ? $this->options['authorize_url'] :
+            (($this->options['authorize_path']) ? $this->options['authorize_path'] :
+            "/oauth/authorize");
     return $path.'?'.http_build_query($params, null, '&');
   }
   
   public function access_token_url($params = null)
   {
-    $path = $this->options['access_token_url'] || $this->options['access_token_path'] || "/oauth/access_token";
+    $path =  ($this->options['access_token_url']) ? $this->options['access_token_url'] :
+            (($this->options['access_token_path']) ? $this->options['access_token_path'] :
+            "/oauth/access_token");
     return $path.'?'.http_build_query($params, null, '&');
   }
   
