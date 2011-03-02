@@ -25,7 +25,7 @@ class WebServer extends Base
     $access = $params['access_token'];
     $refresh = (isset($params['refresh_token'])) ? $params['refresh_token'] : null ;
     $expires_in = (isset($params['expires_in'])) ? $params['expires_in'] : null ;
-    return new OAuth2\AccessToken($this->getClient(), $access, $refresh, $expires_in, $params);
+    return new \OAuth2\AccessToken($this->getClient(), $access, $refresh, $expires_in, $params);
   }
   
   public function access_token_params($code, $options = array())
