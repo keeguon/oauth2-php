@@ -20,6 +20,7 @@ class WebServer extends Base
     $response = $this->getClient()->request('POST', $this->getClient()->getAccessTokenUrl(), $this->access_token_params($code, $options));
     
     $params = json_decode($response);
+    if (!$params) parse_str($response, $params);
     
     $access = $params['access_token'];
     $refresh = (isset($params['refresh_token'])) ? $params['refresh_token'] : null ;
