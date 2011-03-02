@@ -141,11 +141,7 @@ class Client
           $url .= '?'.http_build_query($params, null, '&');
           break;
         default:
-          if ($this->getVariable('file_upload_support')) {
-            $opts[CURLOPT_POSTFIELDS] = $params;
-          } else {
-            $opts[CURLOPT_POSTFIELDS] = http_build_query($params, NULL, '&');
-          }
+          $opts[CURLOPT_POSTFIELDS] = http_build_query($params, NULL, '&');
           break;
       }
     }
