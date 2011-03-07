@@ -2,8 +2,15 @@
 
 namespace OAuth2;
 
+require __DIR__.'/../vendor/php-multi-curl/EpiCurl.php';
+
 class Client
 {
+ /**
+  * Multi-curl handler
+  */
+  protected $mc = EpiCurl::getInstance();
+
  /**
   * Default options for cURL.
   */
@@ -165,52 +172,17 @@ class Client
     }
     
     curl_setopt_array($ch, $opts);
-    $result = curl_exec($ch);
-
-    if (curl_errno($ch) == 60) { // CURLE_SSL_CACERT
-      error_log('Invalid or no certificate authority found, using bundled information');
-      curl_setopt($ch, CURLOPT_CAINFO,
-                  dirname(__FILE__) . '/fb_ca_chain_bundle.crt');
-      $result = curl_exec($ch);
-    }
+    $result = $this->mc->addCurl($ch);
     
-    if ($result === FALSE) {
+    if ($result->data === FALSE) {
       $e = new Exception(array(
         'code' => curl_errno($ch),
         'message' => curl_error($ch),
       ));
-      curl_close($ch);
       throw $e;
     }
-    curl_close($ch);
-    
-    // Split the HTTP response into header and body.
-    list($headers, $body) = explode("\r\n\r\n", $result);
-    $headers = explode("\r\n", $headers);
 
-    // We catch HTTP/1.1 4xx or HTTP/1.1 5xx error response.
-    if (strpos($headers[0], 'HTTP/1.1 4') !== FALSE || strpos($headers[0], 'HTTP/1.1 5') !== FALSE) {
-      $result = array(
-        'code' => 0,
-        'message' => '',
-      );
-
-      if (preg_match('/^HTTP\/1.1 ([0-9]{3,3}) (.*)$/', $headers[0], $matches)) {
-        $result['code'] = $matches[1];
-        $result['message'] = $matches[2];
-      }
-
-      // In case retrun with WWW-Authenticate replace the description.
-      foreach ($headers as $header) {
-        if (preg_match("/^WWW-Authenticate:.*error='(.*)'/", $header, $matches)) {
-          $result['error'] = $matches[1];
-        }
-      }
-
-      return json_encode($result);
-    }
-
-    return $body;
+    return $result->data;
   }
   
   public function web_server()
