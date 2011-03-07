@@ -7,11 +7,6 @@ require __DIR__.'/../vendor/php-multi-curl/EpiCurl.php';
 class Client
 {
  /**
-  * Multi-curl handler
-  */
-  protected $mc = EpiCurl::getInstance();
-
- /**
   * Default options for cURL.
   */
   public static $CURL_OPTS = array(
@@ -172,7 +167,7 @@ class Client
     }
     
     curl_setopt_array($ch, $opts);
-    $result = $this->mc->addCurl($ch);
+    $result = \EpiCurl::getInstance()->addCurl($ch);
     
     if ($result->data === FALSE) {
       $e = new Exception(array(
@@ -181,8 +176,34 @@ class Client
       ));
       throw $e;
     }
+    
+    // Split the HTTP response into header and body.
+    list($headers, $body) = explode("\r\n\r\n", $result->data);
+    $headers = explode("\r\n", $headers);
 
-    return $result->data;
+    // We catch HTTP/1.1 4xx or HTTP/1.1 5xx error response.
+    if (strpos($headers[0], 'HTTP/1.1 4') !== FALSE || strpos($headers[0], 'HTTP/1.1 5') !== FALSE) {
+      $result = array(
+        'code' => 0,
+        'message' => '',
+      );
+
+      if (preg_match('/^HTTP\/1.1 ([0-9]{3,3}) (.*)$/', $headers[0], $matches)) {
+        $result['code'] = $matches[1];
+        $result['message'] = $matches[2];
+      }
+
+      // In case retrun with WWW-Authenticate replace the description.
+      foreach ($headers as $header) {
+        if (preg_match("/^WWW-Authenticate:.*error='(.*)'/", $header, $matches)) {
+          $result['error'] = $matches[1];
+        }
+      }
+
+      return json_encode($result);
+    }
+
+    return $body;
   }
   
   public function web_server()
