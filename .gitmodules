@@ -1,0 +1,3 @@
+[submodule "src/vendor/php-multi-curl"]
+	path = src/vendor/php-multi-curl
+	url = git://github.com/jmathai/php-multi-curl.git
