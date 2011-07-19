@@ -2,7 +2,7 @@
 
 namespace OAuth2;
 
-use \Epiphany\EpiCurl;
+use Epiphany\EpiCurl;
 
 class Client
 {
