@@ -165,7 +165,7 @@ class Client
     }
     
     curl_setopt_array($ch, $opts);
-    $result = Epiphany\EpiCurl::getInstance()->addCurl($ch);
+    $result = \Epiphany\EpiCurl::getInstance()->addCurl($ch);
     
     if ($result->data === FALSE) {
       $e = new Exception(array(
