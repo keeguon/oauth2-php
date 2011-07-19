@@ -1,3 +1,9 @@
+# Mac files
+.DS_Store
+
+# Linux files
+*.swp
+
 # folders
 tests
 
