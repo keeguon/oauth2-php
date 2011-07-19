@@ -8,10 +8,11 @@ use Symfony\Component\ClassLoader\UniversalClassLoader;
 
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(
-    'Symfony' => __DIR__.'/vendor'
-  , 'OAuth2'  => __DIR__.'/src',
+    'Symfony'  => __DIR__.'/vendor'
+  , 'Epiphany' => __DIR__.'/vendor'
+  , 'OAuth2'   => __DIR__.'/src',
 ));
 $loader->registerPrefixes(array(
-  'EpiCurl_' => __DIR__.'/vendor/php-multi-curl',
+  'EpiCurl_' => __DIR__.'/vendor',
 ));
 $loader->register();
