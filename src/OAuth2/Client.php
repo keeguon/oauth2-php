@@ -1,5 +1,9 @@
 <?php
 
+if (false === class_exists('Epiphany\EpiCurl', false)) {
+  require_once __DIR__.'/../../vendor/Epiphany/EpiCurl.php';
+}
+
 namespace OAuth2;
 
 class Client
