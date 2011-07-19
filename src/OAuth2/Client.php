@@ -2,7 +2,7 @@
 
 namespace OAuth2;
 
-require __DIR__.'/../vendor/php-multi-curl/EpiCurl.php';
+require __DIR__.'/../../vendor/php-multi-curl/EpiCurl.php';
 
 class Client
 {
