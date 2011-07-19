@@ -1,10 +1,8 @@
 <?php
 
-if (false === class_exists('Epiphany\EpiCurl', false)) {
-  require_once __DIR__.'/../../vendor/Epiphany/EpiCurl.php';
-}
-
 namespace OAuth2;
+
+use \Epiphany\EpiCurl;
 
 class Client
 {
@@ -169,7 +167,7 @@ class Client
     }
     
     curl_setopt_array($ch, $opts);
-    $result = \Epiphany\EpiCurl::getInstance()->addCurl($ch);
+    $result = EpiCurl::getInstance()->addCurl($ch);
     
     if ($result->data === FALSE) {
       $e = new Exception(array(
