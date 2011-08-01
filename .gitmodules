@@ -1,6 +1,3 @@
 [submodule "vendor/Symfony/Component/ClassLoader"]
 	path = vendor/Symfony/Component/ClassLoader
 	url = git://github.com/symfony/ClassLoader.git
-[submodule "vendor/Epiphany"]
-	path = vendor/Epiphany
-	url = git@github.com:Keeguon/php-multi-curl.git

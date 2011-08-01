@@ -7,14 +7,16 @@ class Client
  /**
   * Default options for cURL.
   */
-  public static $CURL_OPTS = array(
-    CURLOPT_CONNECTTIMEOUT => 10,
-    CURLOPT_RETURNTRANSFER => TRUE,
-    CURLOPT_HEADER         => TRUE,
-    CURLOPT_TIMEOUT        => 60,
-    CURLOPT_USERAGENT      => 'oauth2-draft-v10',
-    CURLOPT_HTTPHEADER     => array("Accept: application/json"),
-  );
+  public static
+    $httpOptions = array(
+      'connecttimeout' => 10,
+      'timeout'        => 60,
+    ),
+    $httpHeaders = array(
+      'User-Agent' => 'ShopWiz/1.0; Facebook PHP',
+      'Accept'     => 'application/json'
+    )
+  ;
 
   protected
     $id         = '',
@@ -132,76 +134,51 @@ class Client
   
   public function request($verb, $url, $params = array(), $headers = array())
   {
-    $ch = curl_init();
-    $opts = self::$CURL_OPTS;
-  
-    if ($params) {
-      switch ($verb) {
-        case 'GET':
-          $url .= '?'.http_build_query($params, null, '&');
-          break;
-        default:
-          $opts[CURLOPT_POSTFIELDS] = http_build_query($params, NULL, '&');
-          break;
-      }
+    // Create the HttpRequest
+    $httpRequest = new \HttpRequest($url);
+    switch ($verb) {
+      //case 'DELETE':
+      //  $httpRequest->setMethod(HTTP_METH_DELETE);
+      //  break;
+      case 'POST':
+        $httpRequest->setMethod(HTTP_METH_POST);
+        $httpRequest->setPostData($params);
+        break;
+      //case 'PUT':
+      //  $httpRequest->setMethod(HTTP_METH_PUT);
+      //  break;
+      case 'GET':
+      default:
+        $httpRequest->setQueryData($params);
+        break;
     }
-    $opts[CURLOPT_URL] = $url;
+    $httpRequest->setOptions(self::$httpOptions);
+    $httpRequest->setHeaders(array_merge(self::$httpHeaders, $headers, array('Expect' => '')));
     
-    if ($headers && isset($opts[CURLOPT_HTTPHEADER])) {
-      $existing_headers = $opts[CURLOPT_HTTPHEADER];
-      array_merge($existing_headers, $headers);
-      $opts[CURLOPT_HTTPHEADER] = $existing_headers;
-    }
-    
-    // Disable the 'Expect: 100-continue' behaviour. This causes cURL to wait
-    // for 2 seconds if the server does not support this header.
-    if (isset($opts[CURLOPT_HTTPHEADER])) {
-      $existing_headers = $opts[CURLOPT_HTTPHEADER];
-      $existing_headers[] = 'Expect:';
-      $opts[CURLOPT_HTTPHEADER] = $existing_headers;
-    }
-    else {
-      $opts[CURLOPT_HTTPHEADER] = array('Expect:');
-    }
-    
-    curl_setopt_array($ch, $opts);
-    $result = \Epiphany\EpiCurl::getInstance()->addCurl($ch);
-    
-    if ($result->data === FALSE) {
+    // Send the HttpRequest
+    $httpRequest->send();
+
+    /*
+    if (!$httpRequest->getResonseBody()) {
       $e = new Exception(array(
         'code' => curl_errno($ch),
         'message' => curl_error($ch),
       ));
       throw $e;
     }
+    */
     
-    // Split the HTTP response into header and body.
-    list($headers, $body) = explode("\r\n\r\n", $result->data);
-    $headers = explode("\r\n", $headers);
-
     // We catch HTTP/1.1 4xx or HTTP/1.1 5xx error response.
-    if (strpos($headers[0], 'HTTP/1.1 4') !== FALSE || strpos($headers[0], 'HTTP/1.1 5') !== FALSE) {
+    if (in_array($httpRequest->getResponseCode(), range(400, 599))) {
       $result = array(
-        'code' => 0,
-        'message' => '',
+        'code' => $httpRequest->getResponseCode(),
+        'message' => $httpRequest->getResponseStatus(),
       );
-
-      if (preg_match('/^HTTP\/1.1 ([0-9]{3,3}) (.*)$/', $headers[0], $matches)) {
-        $result['code'] = $matches[1];
-        $result['message'] = $matches[2];
-      }
-
-      // In case retrun with WWW-Authenticate replace the description.
-      foreach ($headers as $header) {
-        if (preg_match("/^WWW-Authenticate:.*error='(.*)'/", $header, $matches)) {
-          $result['error'] = $matches[1];
-        }
-      }
 
       return json_encode($result);
     }
 
-    return $body;
+    return $httpRequest->getResponseBody();
   }
   
   public function web_server()

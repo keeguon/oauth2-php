@@ -23,7 +23,7 @@ class WebServer extends Base
       throw new \Exception("Invalid code provided");
     }
 
-    $response = $this->getClient()->request('POST', $this->getClient()->access_token_url(), $this->access_token_params($code, $options));
+    $response = $this->getClient()->request('GET', $this->getClient()->access_token_url(), $this->access_token_params($code, $options));
     
     $params = json_decode($response, true);
     if (!$params) parse_str($response, $params);
