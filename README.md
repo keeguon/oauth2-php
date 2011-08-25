@@ -5,6 +5,7 @@ A PHP wrapper for the OAuth 2.0 specification. This is a work in progress, being
 ## Requirements
 
 * PHP 5.3.x
+* HTTP (<http://pecl.php.net/package/pecl_http>)
 
 ## References
 
