@@ -142,7 +142,7 @@ class Client
       //  break;
       case 'POST':
         $httpRequest->setMethod(HTTP_METH_POST);
-        $httpRequest->setPostData($params);
+        $httpRequest->setPostFields($params);
         break;
       //case 'PUT':
       //  $httpRequest->setMethod(HTTP_METH_PUT);
