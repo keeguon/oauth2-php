@@ -136,7 +136,7 @@ class AccessToken
   public function request($verb, $path, $params = array(), $headers = array())
   {
     $params  = array_merge($params, $this->getParams());
-    $headers = array_merge($headers, array('Authorization' => 'OAuth {$this->getToken()}'));
+    $headers = array_merge($headers, array('Authorization' => 'OAuth ' . $this->getToken()));
     return $this->getClient()->request($verb, $path, $params, $headers);
   }
   
