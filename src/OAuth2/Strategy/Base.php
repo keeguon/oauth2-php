@@ -8,52 +8,23 @@ class Base
     $client = null
   ;
 
+ /**
+  * A new instance of Base
+  *
+  * @param \OAuth2\Client $client The OAuth2::Client instance
+  */
   public function __construct($client)
-  {
-    $this->setClient($client);
-  }
-  
- /**
-  * Get the client object
-  *
-  * @return OAuth2\Client The client object
-  */
-  public function getClient()
-  {
-    return $this->client;
-  }
-  
- /**
-  * Set the client object
-  *
-  * @param OAuth2\Client $client The client object
-  */
-  public function setClient($client)
   {
     $this->client = $client;
   }
-  
-  public function authorize_url($options = array())
+
+ /**
+  * The OAuth client_id and client_secret
+  *
+  * @return array
+  */
+  public function client_params()
   {
-    return $this->getClient()->authorize_url($this->authorize_params($options));
-  }
-  
-  public function authorize_params($options = array())
-  {
-    return array_merge(array('client_id' => $this->getClient()->getId()), $options);
-  }
-  
-  public function access_token_url($options = array())
-  {
-    return $this->getClient()->access_token_url($this->access_token_params($options));
-  }
-  
-  public function access_token_params($options = array())
-  {
-    return array_merge(array(
-      'client_id'     => $this->getClient()->getId(),
-      'client_secret' => $this->getClient()->getSecret()
-    ), $options);
+    return array('client_id' => $this->client->id, 'client_secret' => $this->client->secret);
   }
 }
-
