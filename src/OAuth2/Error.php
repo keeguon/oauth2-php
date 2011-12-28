@@ -20,8 +20,8 @@ class Error extends \Exception
     $response->error = $this;
     $this->response  = $response;
 
-    $parsedResponse = $response->parse()
-    if (is_array($parsedResponse) {
+    $parsedResponse = $response->parse();
+    if (is_array($parsedResponse)) {
       $this->code    = $parsedResponse['error'];
       $this->message = $parsedResponse['error_description'];
     }

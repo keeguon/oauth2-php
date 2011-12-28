@@ -5,13 +5,13 @@ namespace OAuth2;
 class Client
 {
   protected
-      $site       = ''
-    , $options    = array()
+      $options    = array()
   ;
 
   public
       $id     = ''
     , $secret = ''
+    , $site   = ''
   ;
 
   public function __construct($client_id, $client_secret, $opts = array())
@@ -39,7 +39,7 @@ class Client
   */
   public function auth_code()
   {
-    $this->auth_code = $this->auth_code ? $this->auth_code : new \OAuth2\Strategy\AuthCode($this);
+    $this->auth_code = isset($this->auth_code) ? $this->auth_code : new \OAuth2\Strategy\AuthCode($this);
     return $this->auth_code;
   }
 
@@ -51,7 +51,7 @@ class Client
   */
   public function authorize_url($params = array())
   {
-    return $this->site.$this->options['authorize_url'].http_build_query($params);
+    return $this->site.$this->options['authorize_url'].'?'.http_build_query($params);
   }
 
  /**
@@ -61,9 +61,12 @@ class Client
   * @param  array $access Token options, to pass to the AccessToken object
   * @return \OAuth2\AccessToken
   */
-  public function get_token($params = array('parse' => 'automatic'), $access_token_opts = array())
+  public function get_token($params = array(), $access_token_opts = array())
   {
-    $opts = array('raise_errors' => true, 'parse' => $params['parse']);
+    $opts = array(
+        'raise_errors' => true
+      , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
+    );
     unset($params['parse']);
     
     if ($this->options['token_method'] === 'POST') {
@@ -78,7 +81,7 @@ class Client
     
     // Handle response
     $parsedResponse = $response->parse();
-    if (!is_array($parsedReponse) && !isset($parsedResponse['access_token']) {
+    if (!is_array($parsedResponse) && !isset($parsedResponse['access_token'])) {
       throw new \OAuth2\Error($response);
     }
 
@@ -107,6 +110,7 @@ class Client
   public function request($verb, $url, $opts = array())
   {
     // Set some default options
+    print_r($opts);
     $opts = array_merge(array(
         'params' => array()
       , 'body' => ''
@@ -116,7 +120,7 @@ class Client
     ), $opts);
 
     // Create the HttpRequest
-    $request = new \HttpRequest($this->site.$url);
+    $request = new \HttpRequest($url);
     switch ($verb) {
       case 'DELETE':
         $request->setMethod(HTTP_METH_DELETE);

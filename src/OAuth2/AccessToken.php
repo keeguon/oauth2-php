@@ -27,7 +27,7 @@ class AccessToken
   {
     // Clumsy PHP token handling
     $token = $hash['access_token'];
-    unset($hash['access_token'];
+    unset($hash['access_token']);
 
     return new \OAuth2\AccessToken($client, $token, $hash);
   }
@@ -64,7 +64,7 @@ class AccessToken
       , 'mode'          => 'header'       // string  The transmission mode of the Access Token parameter value one of 'header', 'body' or 'query'
       , 'header_format' => 'Bearer %s'    // string  The string format to use for the Authorization header
       , 'param_name'    => 'bearer_token' // string  he parameter name to use for transmission of the Access Token value in 'body' or 'query' transmission mode
-    ), $opts)
+    ), $opts);
 
     // Setting class attributes
     $this->client = $client;
@@ -100,7 +100,7 @@ class AccessToken
   */
   public function is_expired()
   {
-    if $this->expires() && ($this->expires_at < time());
+    return $this->expires() && ($this->expires_at < time());
   }
 
  /**
@@ -110,7 +110,7 @@ class AccessToken
   */
   public function expires()
   {
-    return is_null($this->expires_at)
+    return is_null($this->expires_at);
   }
  
  /**
