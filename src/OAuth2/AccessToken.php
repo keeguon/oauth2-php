@@ -177,6 +177,34 @@ class AccessToken
   */
   public function request($verb, $path, $opts = array())
   {
+    $opts = $this->set_token($opts);
     return $this->client->request($verb, $path, $opts);
+  }
+
+
+  private function set_token($opts)
+  {
+    switch ($this->options['mode']) {
+      case 'header':
+        $opts['headers'] = isset($opts['headers']) ? $opts['headers'] : array();
+        $opts['headers']['Authorization'] = sprintf($this->options['header_format'], $this->token);
+        break;
+
+      case 'query':
+        $opts['params'] = isset($opts['params']) ? $opts['params'] : array();
+        $opts['params'][$this->options['param_name']] = $this->token;
+        break;
+
+      case 'body':
+        $opts['body'] = isset($opts['body']) ? $opts['body'] : '';
+        $opts['body'] += "{$this->options['param_name']}={$this->token}";
+        break;
+
+      default:
+        throw new Exception("invalid 'mode' option of {$this->options['mode']}");
+        break;
+    }
+
+    return $opts;
   }
 }

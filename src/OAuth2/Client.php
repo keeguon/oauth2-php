@@ -110,13 +110,12 @@ class Client
   public function request($verb, $url, $opts = array())
   {
     // Set some default options
-    print_r($opts);
     $opts = array_merge(array(
-        'params' => array()
-      , 'body' => ''
-      , 'headers' => array()
+        'params'       => array()
+      , 'body'         => ''
+      , 'headers'      => array()
       , 'raise_errors' => $this->options['raise_errors']
-      , 'parse' => 'automatic'
+      , 'parse'        => 'automatic'
     ), $opts);
 
     // Create the HttpRequest
