@@ -5,10 +5,13 @@ namespace OAuth2;
 class Client
 {
   protected
-    $id         = '',
-    $secret     = '',
-    $site       = '',
-    $options    = array()
+      $site       = ''
+    , $options    = array()
+  ;
+
+  public
+      $id     = ''
+    , $secret = ''
   ;
 
   public function __construct($client_id, $client_secret, $opts = array())
@@ -101,8 +104,17 @@ class Client
   * @param string $url  URL path of the request
   * @param array  $opts The options to make the request with (possible options: params (array), body (string), headers (array), raise_errors (boolean), parse ('automatic', 'query' or 'json')
   */
-  public function request($verb, $url, $opts = array('params' => array(), 'body' => '', 'headers' => array(), 'raise_errors' => $this->options['raise_errors'], 'parse' => 'automatic'))
+  public function request($verb, $url, $opts = array())
   {
+    // Set some default options
+    $opts = array_merge(array(
+        'params' => array()
+      , 'body' => ''
+      , 'headers' => array()
+      , 'raise_errors' => $this->options['raise_errors']
+      , 'parse' => 'automatic'
+    ), $opts);
+
     // Create the HttpRequest
     $request = new \HttpRequest($this->site.$url);
     switch ($verb) {
