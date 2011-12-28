@@ -4,20 +4,6 @@ namespace OAuth2;
 
 class Client
 {
- /**
-  * Default options for cURL.
-  */
-  public static
-    $httpOptions = array(
-      'connecttimeout' => 10,
-      'timeout'        => 60,
-    ),
-    $httpHeaders = array(
-      'User-Agent' => 'ShopWiz/1.0; Facebook PHP',
-      'Accept'     => 'application/json'
-    )
-  ;
-
   protected
     $id         = '',
     $secret     = '',
@@ -27,163 +13,148 @@ class Client
 
   public function __construct($client_id, $client_secret, $opts = array())
   {
-    $this->setId($client_id);
-    $this->setSecret($client_secret);
+    $this->id     = $client_id;
+    $this->secret = $client_secret;
     if (isset($opts['site'])) {
-      $this->setSite($opts['site']);
+      $this->site = $opts['site'];
       unset($opts['site']);
     }
-    $this->setOptions($opts);
-  }
-  
- /**
-  * Get the client id
-  *
-  * @return string The client id
-  */
-  public function getId()
-  {
-    return $this->id;
-  }
-  
- /**
-  * Set the client id
-  *
-  * @param string $id The client id
-  */
-  public function setId($id)
-  {
-    $this->id = $id;
+    $this->options = array_merge(array(
+        'authorize_url'   => '/oauth/authorize'
+      , 'token_url'       => '/oauth/token'
+      , 'token_method'    => 'POST'
+      , 'connection_opts' => array()
+      , 'max_redirects'   => 5
+      , 'raise_errors'    => true
+    ), $opts);
   }
 
  /**
-  * Get the client secret
+  * The Authorization Code strategy
   *
-  * @return string The client secret
+  * @return \OAuth2\Strategy\AuthCode
   */
-  public function getSecret()
+  public function auth_code()
   {
-    return $this->secret;
+    $this->auth_code = $this->auth_code ? $this->auth_code : new \OAuth2\Strategy\AuthCode($this);
+    return $this->auth_code;
+  }
+
+ /**
+  * The authorize endpoint URL of the OAuth2 provider
+  *
+  * @param  array $params Additional query parameters
+  * @return string
+  */
+  public function authorize_url($params = array())
+  {
+    return $this->site.$this->options['authorize_url'].http_build_query($params);
+  }
+
+ /**
+  * Initializes an AccessToken by making a request to the token endpoint
+  *
+  * @param  array $params An array of params for the token endpoint
+  * @param  array $access Token options, to pass to the AccessToken object
+  * @return \OAuth2\AccessToken
+  */
+  public function get_token($params = array('parse' => 'automatic'), $access_token_opts = array())
+  {
+    $opts = array('raise_errors' => true, 'parse' => $params['parse']);
+    unset($params['parse']);
+    
+    if ($this->options['token_method'] === 'POST') {
+      $opts['body']    = http_build_query($params);
+      $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
+    } else {
+      $opts['params'] = http_build_query($params);
+    }
+
+    // Make request
+    $response = $this->request($this->options['token_method'], $this->token_url(), $opts);
+    
+    // Handle response
+    $parsedResponse = $response->parse();
+    if (!is_array($parsedReponse) && !isset($parsedResponse['access_token']) {
+      throw new \OAuth2\Error($response);
+    }
+
+    // Return access token
+    return \OAuth2\AccessToken::from_hash($this, array_merge($parsedResponse, $access_token_opts));
+  }
+
+ /**
+  * The Resource Owner Password Credentials strategy
+  *
+  * @return \OAuth2\Strategy\Password
+  */
+  public function password()
+  {
+    $this->password = $this->password ? $this->password : new \OAuth2\Strategy\Password($this);
+    return $this->password;
   }
   
  /**
-  * Set the client secret
+  * Makes a request relative to the specified site root.
   *
-  * @param string $secret The client secret
+  * @param string $verb One of the following http method: GET, POST, PUT, DELETE
+  * @param string $url  URL path of the request
+  * @param array  $opts The options to make the request with (possible options: params (array), body (string), headers (array), raise_errors (boolean), parse ('automatic', 'query' or 'json')
   */
-  public function setSecret($secret)
-  {
-    $this->secret = $secret;
-  }
-  
- /**
-  * Get the provide site
-  *
-  * @return string The provider site
-  */
-  public function getSite()
-  {
-    return $this->site;
-  }
-  
- /**
-  * Set the provider site
-  *
-  * @param string $site The provide site
-  */
-  public function setSite($site)
-  {
-    $this->site = $site;
-  }
-  
- /**
-  * Get options
-  *
-  * @return array The options
-  */  
-  public function getOptions()
-  {
-    return $this->options;
-  }
-  
- /**
-  * Set options
-  *
-  * @param array $options The options
-  */
-  public function setOptions($options)
-  {
-    $this->options = $options;
-  }
-  
-  public function authorize_url($params = null)
-  {
-    $path =  ($this->options['authorize_url']) ? $this->options['authorize_url'] :
-            (($this->options['authorize_path']) ? $this->options['authorize_path'] :
-            "/oauth/authorize");
-    return $path.'?'.http_build_query($params, null, '&');
-  }
-  
-  public function access_token_url($params = null)
-  {
-    $path =  ($this->options['access_token_url']) ? $this->options['access_token_url'] :
-            (($this->options['access_token_path']) ? $this->options['access_token_path'] :
-            "/oauth/access_token");
-    return $path.'?'.http_build_query($params, null, '&');
-  }
-  
-  public function request($verb, $url, $params = array(), $headers = array())
+  public function request($verb, $url, $opts = array('params' => array(), 'body' => '', 'headers' => array(), 'raise_errors' => $this->options['raise_errors'], 'parse' => 'automatic'))
   {
     // Create the HttpRequest
-    $httpRequest = new \HttpRequest($url);
+    $request = new \HttpRequest($this->site.$url);
     switch ($verb) {
-      //case 'DELETE':
-      //  $httpRequest->setMethod(HTTP_METH_DELETE);
-      //  break;
-      case 'POST':
-        $httpRequest->setMethod(HTTP_METH_POST);
-        $httpRequest->setPostFields($params);
+      case 'DELETE':
+        $request->setMethod(HTTP_METH_DELETE);
         break;
-      //case 'PUT':
-      //  $httpRequest->setMethod(HTTP_METH_PUT);
-      //  break;
+      case 'POST':
+        $request->setMethod(HTTP_METH_POST);
+        $request->setPostFields($opts['params']);
+        break;
+      case 'PUT':
+        $request->setMethod(HTTP_METH_PUT);
+        $request->setPutData($opts['params']);
+        break;
       case 'GET':
       default:
-        $httpRequest->setQueryData($params);
+        $request->setQueryData($opts['params']);
         break;
     }
-    $httpRequest->setOptions(self::$httpOptions);
-    $httpRequest->setHeaders(array_merge(self::$httpHeaders, $headers, array('Expect' => '')));
+    $request->setBody($opts['body']);
+    $request->setHeaders($opts['headers']);
+    $request->setOptions(array(
+        'redirect' => $this->options['max_redirects'] ? $this->options['max_redirects'] : 0
+    ));
     
-    // Send the HttpRequest
-    $httpRequest->send();
+    // Send request and use the returned HttpMessage to create an \OAuth2\Response object
+    $request->send();
+    $response = new \OAuth2\Response($request->getResponseMessage(), array('parse' => $opts['parse']));
 
-    /*
-    if (!$httpRequest->getResonseBody()) {
-      $e = new Exception(array(
-        'code' => curl_errno($ch),
-        'message' => curl_error($ch),
-      ));
-      throw $e;
+    // Response handling
+    if (in_array($response->status(), range(200, 299))) {
+      return $response;
+    } else if (in_array($response->status(), range(400, 599))) {
+      $e = new \OAuth2\Error($response);
+      if ($opts['raise_errors'] || $this->options['raise_errors']) {
+        throw $e;
+      }
+      $response->error = $e;
+      return $response;
+    } else {
+      throw new \OAuth2\Error($response);
     }
-    */
-    
-    // We catch HTTP/1.1 4xx or HTTP/1.1 5xx error response.
-    if (in_array($httpRequest->getResponseCode(), range(400, 599))) {
-      $result = array(
-        'code' => $httpRequest->getResponseCode(),
-        'message' => $httpRequest->getResponseStatus(),
-      );
-
-      return json_encode($result);
-    }
-
-    return $httpRequest->getResponseBody();
   }
-  
-  public function web_server()
+
+ /**
+  * The token endpoint URL of the OAuth2 provider
+  *
+  * @param  array $params Additional query parameters
+  * @return string
+  */
+  public function token_url($params = array())
   {
-    return new Strategy\WebServer($this);
+    return $this->site.$this->options['token_url'].http_build_query($params);
   }
 }
-
