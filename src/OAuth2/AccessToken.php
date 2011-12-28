@@ -201,7 +201,7 @@ class AccessToken
         break;
 
       default:
-        throw new Exception("invalid 'mode' option of {$this->options['mode']}");
+        throw new \Exception("invalid 'mode' option of {$this->options['mode']}");
         break;
     }
 
