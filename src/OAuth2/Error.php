@@ -22,8 +22,8 @@ class Error extends \Exception
 
     $parsedResponse = $response->parse();
     if (is_array($parsedResponse)) {
-      $this->code    = $parsedResponse['error'];
-      $this->message = $parsedResponse['error_description'];
+      $this->code    = $parsedResponse['error'] ?: 0;
+      $this->message = $parsedResponse['error_description'] ?: null;
     }
   }
 }
