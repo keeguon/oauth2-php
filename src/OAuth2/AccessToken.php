@@ -72,7 +72,7 @@ class AccessToken
     foreach (array('refresh_token', 'expires_in', 'expires_at') as $arg) {
       $this->$arg = (string) $opts[$arg];
     }
-    $this->expires_in = $this->expires_in ? (int) $this->expires_in : (int) $opts['expires'];
+    $this->expires_in = isset($opts['expires']) ? (int) $opts['expires'] : (int) $this->expires_in;
     if ($this->expires_in) {
       $this->expires_at = $this->expires_at ? $this->expires_at : time() + $this->expires_in;
     }
