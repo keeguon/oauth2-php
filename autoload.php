@@ -9,6 +9,6 @@ use Symfony\Component\ClassLoader\UniversalClassLoader;
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(
     'Symfony'  => __DIR__.'/vendor'
-  , 'OAuth2'   => __DIR__.'/src',
+  , 'OAuth2'   => __DIR__.'/src'
 ));
 $loader->register();
