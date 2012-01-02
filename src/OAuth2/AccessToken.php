@@ -6,14 +6,14 @@ class AccessToken
 {
   protected
       $client        = null
-    , $expires_at    = null
     , $expires_in    = null
     , $refresh_token = null
-    , $token         = null
   ;
 
   public
-      $options = array()
+      $expires_at    = null
+    , $token         = null
+    , $options = array()
   ;
 
  /**
