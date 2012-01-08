@@ -24,12 +24,12 @@ class Response
 
   public function content_type()
   {
-    return $this->response->getHeader('Content-Type');
+    return $this->response->getContent-Type();
   }
 
   public function headers()
   {
-    return $this->response->getHeaders();
+    return $this->response->getHeaders()->getAll();
   }
 
   public function parse()
@@ -62,6 +62,6 @@ class Response
 
   public function status()
   {
-    return $this->response->getResponseCode();
+    return $this->response->getStatusCode();
   }
 }

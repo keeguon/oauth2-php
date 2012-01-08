@@ -9,9 +9,10 @@ class Client
   ;
 
   public
-      $id     = ''
-    , $secret = ''
-    , $site   = ''
+      $connection = null
+    , $id         = ''
+    , $secret     = ''
+    , $site       = ''
   ;
 
   public function __construct($client_id, $client_secret, $opts = array())
@@ -22,6 +23,8 @@ class Client
       $this->site = $opts['site'];
       unset($opts['site']);
     }
+
+    // Default options
     $this->options = array_merge(array(
         'authorize_url'   => '/oauth/authorize'
       , 'token_url'       => '/oauth/token'
@@ -30,6 +33,9 @@ class Client
       , 'max_redirects'   => 5
       , 'raise_errors'    => true
     ), $opts);
+
+    // Connection object using Guzzle
+    $this->connection = new \Guzzle\Service\Client($this->site);
   }
 
  /**
@@ -51,7 +57,7 @@ class Client
   */
   public function authorize_url($params = array())
   {
-    return $this->site.$this->options['authorize_url'].'?'.http_build_query($params);
+    return $this->options['authorize_url'].'?'.http_build_query($params);
   }
 
  /**
@@ -118,34 +124,31 @@ class Client
       , 'parse'        => 'automatic'
     ), $opts);
 
-    // Create the HttpRequest
-    $request = new \HttpRequest($url);
+    // Create the request
     switch ($verb) {
       case 'DELETE':
-        $request->setMethod(HTTP_METH_DELETE);
+        $request = $this->connection->delete($url, $opts['headers']);
+        $request->getQuery()->merge($opts['params']);
         break;
       case 'POST':
-        $request->setMethod(HTTP_METH_POST);
-        $request->setPostFields($opts['params']);
+        $request = $this->connection->post($url, $opts['headers'], $opts['params']);
+        $request->setBody($opts['body']);
         break;
       case 'PUT':
-        $request->setMethod(HTTP_METH_PUT);
-        $request->setPutData($opts['params']);
+        $request = $this->connection->put($url, $opts['headers'], $opts['body']);
         break;
       case 'GET':
       default:
-        $request->setQueryData($opts['params']);
+        $request = $this->connection->get($url, $opts['headers'], $opts['body']);
+        $request->getQuery()->merge($opts['params']);
         break;
     }
-    $request->setBody($opts['body']);
-    $request->setHeaders($opts['headers']);
-    $request->setOptions(array(
-        'redirect' => $this->options['max_redirects'] ? $this->options['max_redirects'] : 0
-    ));
+
+    // Custom cURL options
+    $request->getCurlOptions->set(CURLOPT_MAXREDIRS, isset($this->options['max_redirects']) ? $this->options['max_redirects'] : 0)
     
     // Send request and use the returned HttpMessage to create an \OAuth2\Response object
-    $request->send();
-    $response = new \OAuth2\Response($request->getResponseMessage(), array('parse' => $opts['parse']));
+    $response = new \OAuth2\Response($request->send(), array('parse' => $opts['parse']));
 
     // Response handling
     if (in_array($response->status(), range(200, 299))) {
@@ -170,6 +173,6 @@ class Client
   */
   public function token_url($params = array())
   {
-    return $this->site.$this->options['token_url'].http_build_query($params);
+    return $this->options['token_url'].'?'.http_build_query($params);
   }
 }
