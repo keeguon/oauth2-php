@@ -145,7 +145,7 @@ class Client
     }
 
     // Custom cURL options
-    $request->getCurlOptions->set(CURLOPT_MAXREDIRS, isset($this->options['max_redirects']) ? $this->options['max_redirects'] : 0)
+    $request->getCurlOptions->set(CURLOPT_MAXREDIRS, isset($this->options['max_redirects']) ? $this->options['max_redirects'] : 0);
     
     // Send request and use the returned HttpMessage to create an \OAuth2\Response object
     $response = new \OAuth2\Response($request->send(), array('parse' => $opts['parse']));
