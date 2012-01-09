@@ -76,7 +76,7 @@ class Client
     unset($params['parse']);
     
     if ($this->options['token_method'] === 'POST') {
-      $opts['body']    = http_build_query($params);
+      $opts['params']  = $params;
       $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
     } else {
       $opts['params'] = http_build_query($params);
@@ -132,7 +132,6 @@ class Client
         break;
       case 'POST':
         $request = $this->connection->post($url, $opts['headers'], $opts['params']);
-        $request->setBody($opts['body']);
         break;
       case 'PUT':
         $request = $this->connection->put($url, $opts['headers'], $opts['body']);
