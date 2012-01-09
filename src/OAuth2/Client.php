@@ -57,7 +57,7 @@ class Client
   */
   public function authorize_url($params = array())
   {
-    return (strpos($uri, 'http') === 0) ? $this->options['authorize_url'].'?'.http_build_query($params) : $this->site.$this->options['authorize_url'].'?'.http_build_query($params);
+    return (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'].'?'.http_build_query($params) : $this->site.$this->options['authorize_url'].'?'.http_build_query($params);
   }
 
  /**
