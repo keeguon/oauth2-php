@@ -128,9 +128,9 @@ class AccessToken
   *
   * @see request
   */
-  public function post($path, $params = array(), $headers = array())
+  public function post($path, $opts = array())
   {
-    return $this->request('POST', $path, $params, $headers);
+    return $this->request('POST', $path, $opts);
   }
   
  /**
@@ -138,9 +138,9 @@ class AccessToken
   *
   * @see request
   */
-  public function put($path, $params = array(), $headers = array())
+  public function put($path, $opts = array())
   {
-    return $this->request('PUT', $path, $params, $headers);
+    return $this->request('PUT', $path, $opts);
   }
 
  /**
