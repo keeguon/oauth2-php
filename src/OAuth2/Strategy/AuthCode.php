@@ -12,10 +12,10 @@ class AuthCode extends \OAuth2\Strategy\Base
   */
   public function authorize_params($params = array())
   {
-    return array_merge($params, array(
+    return array_merge(array(
         'response_type' => 'code'
       , 'client_id'     => $this->client->id
-    ));
+    ), $params);
   }
 
  /**
@@ -26,7 +26,8 @@ class AuthCode extends \OAuth2\Strategy\Base
   */
   public function authorize_url($params = array())
   {
-    return $this->client->authorize_url(array_merge($this->authorize_params(), $params));
+    $params = array_merge($this->authorize_params(), $this->client->redirect_uri(), $params);
+    return $this->client->authorize_url($params);
   }
 
  /**
@@ -41,7 +42,7 @@ class AuthCode extends \OAuth2\Strategy\Base
     $params = array_merge(array(
         'grant_type' => 'authorization_code'
       , 'code'       => $code
-    ), $this->client_params(), $params);
+    ), $this->client_params(), $this->client->redirect_uri(),$params);
     return $this->client->get_token($params, $opts);
   }
 }

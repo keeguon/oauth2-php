@@ -105,6 +105,16 @@ class Client
     $this->password = $this->password ? $this->password : new \OAuth2\Strategy\Password($this);
     return $this->password;
   }
+
+ /**
+  * Return either an empty array or an array containing the redirect_uri
+  *
+  * @return array
+  */
+  public function redirect_uri()
+  {
+    return isset($this->options['redirect_uri']) ? array('redirect_uri' => $this->options['redirect_uri']) : array();
+  }
   
  /**
   * Makes a request relative to the specified site root.
