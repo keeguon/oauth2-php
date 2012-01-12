@@ -1,0 +1,23 @@
+{
+    "name": "keeguon/oauth2-php"
+  , "type": "library"
+  , "description": "A library to consume services using the OAuth 2 security scheme."
+  , "keywords": ["oauth2"]
+  , "homepage": "https://github.com/Keeguon/oauth2-php"
+  , "version": "0.5.5"
+  , "license": "MIT"
+  , "authors": [
+        {
+            "name":     "Félix Bellanger"
+          , "email":    "felix.bellanger@gmail.com"
+          , "homepage": "http://felixbellanger.com"
+        }
+    ]
+  , "require": {
+        "php": ">=5.3.2"
+      , "guzzle/guzzle": ">=1.0.3"
+    }
+  , "autoload": {
+        "psr-0": { "OAuth2": "src/" }
+    }
+}
