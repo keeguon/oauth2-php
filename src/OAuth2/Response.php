@@ -19,12 +19,12 @@ class Response
 
   public function body()
   {
-    return $this->response->getBody();
+    return $this->response->getBody(true);
   }
 
   public function content_type()
   {
-    return $this->response->getContent-Type();
+    return $this->response->getContentType();
   }
 
   public function headers()

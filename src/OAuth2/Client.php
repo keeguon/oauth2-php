@@ -4,13 +4,10 @@ namespace OAuth2;
 
 class Client
 {
-  protected
-      $options    = array()
-  ;
-
   public
       $connection = null
     , $id         = ''
+    , $options    = ''
     , $secret     = ''
     , $site       = ''
   ;
@@ -57,7 +54,8 @@ class Client
   */
   public function authorize_url($params = array())
   {
-    return (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'].'?'.http_build_query($params) : $this->site.$this->options['authorize_url'].'?'.http_build_query($params);
+    $authorize_url = (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'] : $this->site.$this->options['authorize_url'];
+    return (count($params)) ? $authorize_url.'?'.http_build_query($params) : $authorize_url;
   }
 
  /**
@@ -153,15 +151,24 @@ class Client
         break;
     }
 
-    // Custom cURL options
-    $request->getCurlOptions()->set(CURLOPT_MAXREDIRS, isset($this->options['max_redirects']) ? $this->options['max_redirects'] : 0);
-    
     // Send request and use the returned HttpMessage to create an \OAuth2\Response object
     $response = new \OAuth2\Response($request->send(), array('parse' => $opts['parse']));
 
     // Response handling
     if (in_array($response->status(), range(200, 299))) {
       return $response;
+    } else if (in_array($response->status(), range(300, 399))) {
+      $opts['redirect_count'] = $opts['redirect_count'] || 0;
+      $opts['redirect_count'] += 1;
+      if ($opts['redirect_count'] > $this->options['max_redirects']) {
+        return $response;
+      }
+      if ($response->status() === 303) {
+        $verb = 'GET';
+        $opts['body'] = '';
+      }
+      $headers = $response->headers();
+      $this->request($verb, $headers['location'], $opts);
     } else if (in_array($response->status(), range(400, 599))) {
       $e = new \OAuth2\Error($response);
       if ($opts['raise_errors'] || $this->options['raise_errors']) {
@@ -182,6 +189,7 @@ class Client
   */
   public function token_url($params = array())
   {
-    return $this->options['token_url'].'?'.http_build_query($params);
+    $token_url = (strpos($this->options['token_url'], 'http') === 0) ? $this->options['token_url'] : $this->site.$this->options['token_url'];
+    return (count($params)) ? $token_url.'?'.http_build_query($params) : $token_url;
   }
 }

@@ -3,7 +3,6 @@
 *.sw[a-z]
 
 # Other files
-autoload.php
 composer.phar
 phpunit.xml
 
