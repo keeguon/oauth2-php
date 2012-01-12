@@ -5,15 +5,16 @@ namespace OAuth2;
 class AccessToken
 {
   protected
-      $client        = null
-    , $expires_in    = null
+      $expires_in    = null
     , $refresh_token = null
   ;
 
   public
-      $expires_at    = null
-    , $token         = null
-    , $options = array()
+      $client        = null
+    , $expires_at = null
+    , $token      = null
+    , $options    = array()
+    , $params     = array()
   ;
 
  /**
@@ -44,7 +45,7 @@ class AccessToken
     // Parse key/value application/x-www-form-urlencoded string into a hash
     parse_str($kvform, $hash);
 
-    return \OAuth\AccessToken::from_hash($client, $hash);
+    return \OAuth2\AccessToken::from_hash($client, $hash);
   }
   
  /**
@@ -71,16 +72,23 @@ class AccessToken
     $this->token  = $token;
     foreach (array('refresh_token', 'expires_in', 'expires_at') as $arg) {
       $this->$arg = (string) $opts[$arg];
+      unset($opts[$arg]);
     }
+    
     $this->expires_in = isset($opts['expires']) ? (int) $opts['expires'] : (int) $this->expires_in;
     if ($this->expires_in) {
       $this->expires_at = $this->expires_at ? $this->expires_at : time() + $this->expires_in;
     }
+    unset($opts['expires']);
+
     $this->options = array(
         'mode'          => $opts['mode']
       , 'header_format' => $opts['header_format']
       , 'param_name'    => $opts['param_name']
     );
+    unset($opts['mode'], $opts['header_format'], $opts['param_name']);
+
+    $this->params = $opts;
   }
 
  /**
@@ -110,7 +118,7 @@ class AccessToken
   */
   public function expires()
   {
-    return is_null($this->expires_at);
+    return !is_null($this->expires_at);
   }
  
  /**

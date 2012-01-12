@@ -5,7 +5,9 @@ namespace OAuth2\Tests;
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
  /**
-  * @var Client
+  * @var OAuth2\Client
+  * @var string
+  * @var string
   */
   protected
       $client                  = null
