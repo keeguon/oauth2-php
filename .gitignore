@@ -1,9 +1,10 @@
 # Mac files
 .DS_Store
+*.sw[a-z]
 
-# Linux files
-*.swp
+# Other files
+autoload.php
+composer.phar
+phpunit.xml
 
-# folders
-tests
-
+# Folders
