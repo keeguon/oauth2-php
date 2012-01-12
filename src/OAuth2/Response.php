@@ -34,25 +34,25 @@ class Response
 
   public function parse()
   {
-    $parsed = $this->body();
+    $parsed = null;
 
     switch ($this->options['parse']) {
       case 'json':
-        $parsed = json_decode($parsed, true);
+        $parsed = json_decode($this->body(), true);
         break;
 
       case 'query':
-        parse_str($parsed, $parsed);
+        parse_str($this->body(), $parsed);
         break;
 
       case 'automatic':
       default:
         if (in_array($this->content_type(), array('application/json', 'text/javascript'))) {
-          $parsed = json_decode($parsed, true);
+          $parsed = json_decode($this->body(), true);
         }
 
         if ($this->content_type() === "application/x-www-form-urlencoded") {
-          parse_str($parsed, $parsed);
+          parse_str($this->body(), $parsed);
         }
         break;
     }
