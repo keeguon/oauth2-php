@@ -4,11 +4,6 @@ namespace OAuth2\Tests;
 
 class AccessTokenTest extends \PHPUnit_Framework_TestCase
 {
-  const GET    = 'GET';
-  const POST   = 'POST';
-  const PUT    = 'PUT';
-  const DELETE = 'DELETE';
-
  /**
   * @var OAuth2\AccessToken
   * @var OAuth2\Client
@@ -94,9 +89,110 @@ class AccessTokenTest extends \PHPUnit_Framework_TestCase
   */
   public function testRequest()
   {
+    // header mode
+    $this->access_token->options['mode'] = 'header';
+    foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
+      // sends the token in the Authorization header for a {$verb} request
+      $this->assertContains($this->token, $this->access_token->request($verb, '/token/header')->body());
+    }
 
+    // query mode
+    $this->access_token->options['mode'] = 'query';
+    foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
+      // sends the token in the query params for a {$verb} request
+      $this->assertEquals($this->token, $this->access_token->request($verb, '/token/query')->body());
+    }
+    
+    // body mode
+    $this->access_token->options['mode'] = 'body';
+    foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
+      // sends the token in the body for a {$verb} request
+      $data = array_reverse(explode('=', $this->access_token->request($verb, '/token/body')->body()));
+      $this->assertEquals($this->token, $data[0]);
+    }
   }
 
+ /**
+  * @covers OAuth2\AccessToken::expires()
+  */
+  public function testExpires()
+  {
+    // should be false if there is no expires_at
+    $target = new \OAuth2\AccessToken($this->client, $this->token);
+    $this->assertFalse($target->expires());
+
+    // should be true if there is an expires_in
+    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_in' => 600));
+    $this->assertTrue($target->expires());
+
+    // should be true if there is an expires_at
+    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_at' => time() + 600));
+    $this->assertTrue($target->expires());
+  }
+
+ /**
+  * @covers OAuth2\AccessToken::is_expired()
+  */
+  public function testIsExpired()
+  {
+    // should be false if there is no expires_in or expires_at
+    $target = new \OAuth2\AccessToken($this->client, $this->token);
+    $this->assertFalse($target->is_expired());
+
+    // should be false if expires_in is in the future
+    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_in' => 10800));
+    $this->assertFalse($target->is_expired());
+
+    // should be true if expires_at is in the past
+    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_at' => time() - 600));
+    $this->assertTrue($target->is_expired());
+  }
+
+ /**
+  * @covers OAuth2\AccessToken::refresh()
+  */
+  public function testRefresh()
+  {
+    // returns a refresh token with appropriate values carried over
+    $target    = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_in' => 600, 'param_name' => 'o_param'));
+    $refreshed = $target->refresh();
+    $this->assertEquals($refreshed->client, $target->client);
+    $this->assertEquals($refreshed->options['param_name'], $target->options['param_name']);
+  }
+
+ /**
+  * Intercept all OAuth2\Client::request() calls and mock their responses
+  */
+  public function mockRequest()
+  {
+    // retrieve args
+    $args = func_get_args();
+
+    // create response based on mode
+    switch ($args[1]) {
+      case '/token/header':
+        $body = sprintf($this->access_token->options['header_format'], $this->access_token->token);
+        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $body));
+        break;
+
+      case '/token/query':
+        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $this->access_token->token));
+        break;
+
+      case '/token/body':
+        $body = "{$this->access_token->options['param_name']}={$this->access_token->token}";
+        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $body));
+        break;
+
+      case 'https://api.example.com/oauth/token':
+        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->refresh_body));
+        break;
+    }
+  }
+
+ /**
+  * Assert for token initialization
+  */
   private function assertInitializeToken($target) {
     $this->assertEquals($this->token, $target->token);
     $this->assertTrue($target->expires());

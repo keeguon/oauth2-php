@@ -71,7 +71,7 @@ class AccessToken
     $this->client = $client;
     $this->token  = $token;
     foreach (array('refresh_token', 'expires_in', 'expires_at') as $arg) {
-      $this->$arg = (string) $opts[$arg];
+      $this->$arg = $opts[$arg];
       unset($opts[$arg]);
     }
     

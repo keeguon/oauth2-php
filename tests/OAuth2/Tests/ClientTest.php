@@ -163,7 +163,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   }
 
  /**
-  * Callback method for mocked request
+  * Intercept all OAuth2\Client::request() calls and mock their responses
   */
   public function mockRequest()
   {
