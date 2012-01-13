@@ -1,4 +1,5 @@
-# OAuth2-PHP
+# OAuth2-PHP [![Build Status](https://secure.travis-ci.org/Keeguon/oauth2-php.png)](http://travis-ci.org/Keeguon/oauth2-php)
+
 
 A PHP library aimed to consume services using OAuth 2 as a security scheme.
 
