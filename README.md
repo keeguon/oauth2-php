@@ -1,18 +1,15 @@
-OAuth2-PHP
-----------
+# OAuth2-PHP
 
 A PHP library aimed to consume services using OAuth 2 as a security scheme.
 
 
-Dependencies
-============
+## Dependencies
 
 * PHP >=5.3.2
 * Guzzle >=1.0.3
 
 
-Installation
-============
+## Installation
 
 ### composer
 
@@ -38,8 +35,7 @@ You have now OAuth2-PHP installed in vendor/keeguon/oauth2-php
 And an handy autoload file to include in you project in vendor/.composer/autoload.php
 
 
-Testing
-=======
+## Testing
 
 The library is fully tested with PHPUnit for unit tests. To run tests you need PHPUnit installed on your system.
 
@@ -48,8 +44,7 @@ Go to the base library folder and run the test suites
     $ phpunit
 
 
-License
-=======
+## License
 
 Copyright (c) 2012 Félix Bellanger <felix.bellanger@gmail.com>
 
