@@ -30,7 +30,7 @@ class AccessTokenTest extends \PHPUnit_Framework_TestCase
     $this->refresh_body = json_encode(array('access_token' => 'refreshed_foo', 'expires_in' => 600, 'refresh_token' => 'refresh_bar'));
 
     // mock client object
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('client_id' => 'abc', 'client_secret' => 'def', 'opts' => array('site' => 'https://api.example.com')));
+    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
 
     // configure mocked client
     $this->client->expects($this->any())

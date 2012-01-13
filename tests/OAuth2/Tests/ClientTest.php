@@ -22,7 +22,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   protected function setUp()
   {
     // mock client object
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('client_id' => 'abc', 'client_secret' => 'def', 'opts' => array('site' => 'https://api.example.com')));
+    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
     
     // configure mocked client
     $this->client->expects($this->any())

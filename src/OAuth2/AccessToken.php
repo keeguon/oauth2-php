@@ -4,17 +4,14 @@ namespace OAuth2;
 
 class AccessToken
 {
-  protected
-      $expires_in    = null
-    , $refresh_token = null
-  ;
-
   public
       $client        = null
     , $expires_at = null
+    , $expires_in    = null
     , $token      = null
     , $options    = array()
     , $params     = array()
+    , $refresh_token = null
   ;
 
  /**
