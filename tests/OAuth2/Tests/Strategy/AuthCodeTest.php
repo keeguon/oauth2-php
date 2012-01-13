@@ -37,6 +37,18 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
     $this->auth_code = new \OAuth2\Strategy\AuthCode($this->client);
   }
 
+  protected function tearDown()
+  {
+    unset($this->code);
+    unset($this->mode);
+    unset($this->kvform_token);
+    unset($this->facebook_token);
+    unset($this->json_token);
+    unset($this->client);
+    unset($this->auth_code);
+    unset($this->access);
+  }
+
  /**
   * @covers OAuth2\Strategy\AuthCode::authorize_url()
   */

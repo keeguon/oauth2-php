@@ -2,14 +2,14 @@
 
 namespace OAuth2\Strategy;
 
-class Password extends \OAuth2\Base
+class Password extends \OAuth2\Strategy\Base
 {
  /**
   * Not used for this strategy
   */
   public function authorize_url()
   {
-    throw new Exception("The authorization endpoint is not used in this strategy");
+    throw new \ErrorException('The authorization endpoint is not used in this strategy.');
   }
 
  /**

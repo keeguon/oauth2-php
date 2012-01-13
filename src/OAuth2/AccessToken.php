@@ -157,7 +157,7 @@ class AccessToken
   public function refresh($params = array())
   {
     if (!$this->refresh_token) {
-      throw new Exception("A refresh_token is not available");
+      throw new \ErrorException("A refresh_token is not available");
     }
 
     array_merge($params, array(
@@ -206,7 +206,7 @@ class AccessToken
         break;
 
       default:
-        throw new \Exception("invalid 'mode' option of {$this->options['mode']}");
+        throw new \ErrorException("invalid 'mode' option of {$this->options['mode']}");
         break;
     }
 
