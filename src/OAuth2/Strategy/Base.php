@@ -4,9 +4,7 @@ namespace OAuth2\Strategy;
 
 class Base
 {
-  protected
-    $client = null
-  ;
+  protected $client = null;
 
  /**
   * A new instance of Base
@@ -27,8 +25,8 @@ class Base
   *
   * @return array
   */
-  public function client_params()
+  public function clientParams()
   {
-    return array('client_id' => $this->client->id, 'client_secret' => $this->client->secret);
+    return array('client_id' => $this->client->getId(), 'client_secret' => $this->client->getSecret());
   }
 }

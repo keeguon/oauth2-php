@@ -10,11 +10,11 @@ class AuthCode extends \OAuth2\Strategy\Base
   * @param  array $params Additional query parameters
   * @return array
   */
-  public function authorize_params($params = array())
+  public function authorizeParams($params = array())
   {
     return array_merge(array(
         'response_type' => 'code'
-      , 'client_id'     => $this->client->id
+      , 'client_id'     => $this->client->getId()
     ), $params);
   }
 
@@ -24,10 +24,10 @@ class AuthCode extends \OAuth2\Strategy\Base
   * @param  array $params Additional query parameters for the URL
   * @return string
   */
-  public function authorize_url($params = array())
+  public function authorizeUrl($params = array())
   {
-    $params = array_merge($this->authorize_params(), $this->client->redirect_uri(), $params);
-    return $this->client->authorize_url($params);
+    $params = array_merge($this->authorizeParams(), $params);
+    return $this->client->authorizeUrl($params);
   }
 
  /**
@@ -37,12 +37,12 @@ class AuthCode extends \OAuth2\Strategy\Base
   * @param array  $params Additional params
   * @param array  $opts   Options 
   */
-  public function get_token($code, $params = array(), $opts = array())
+  public function getToken($code, $params = array(), $opts = array())
   {
     $params = array_merge(array(
         'grant_type' => 'authorization_code'
       , 'code'       => $code
-    ), $this->client_params(), $this->client->redirect_uri(),$params);
-    return $this->client->get_token($params, $opts);
+    ), $this->clientParams(), $params);
+    return $this->client->getToken($params, $opts);
   }
 }

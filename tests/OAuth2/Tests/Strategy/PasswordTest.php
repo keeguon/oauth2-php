@@ -4,12 +4,10 @@ namespace OAuth2\Tests\Strategy;
 
 class PasswordTest extends \PHPUnit_Framework_TestCase
 {
-  protected
-      $client   = null
-    , $password = null
-    , $mode     = ''
-    , $access   = null
-  ;
+  protected $access   = null;
+  protected $client   = null;
+  protected $mode     = '';
+  protected $password = null;
 
  /**
   * Set up fixtures
@@ -30,10 +28,10 @@ class PasswordTest extends \PHPUnit_Framework_TestCase
 
   protected function tearDown()
   {
-    unset($this->client);
-    unset($this->password);
-    unset($this->mode);
     unset($this->access);
+    unset($this->client);
+    unset($this->mode);
+    unset($this->password);
   }
 
  /**
@@ -42,7 +40,7 @@ class PasswordTest extends \PHPUnit_Framework_TestCase
   public function testAuthorizeUrl()
   {
     $this->setExpectedException('\ErrorException', 'The authorization endpoint is not used in this strategy.');
-    $this->password->authorize_url();
+    $this->password->authorizeUrl();
   }
 
  /**
@@ -53,22 +51,22 @@ class PasswordTest extends \PHPUnit_Framework_TestCase
     foreach(array('json', 'formencoded') as $mode) {
       // get_token (mode)
       $this->mode   = $mode;
-      $this->access = $this->password->get_token('username', 'password');
+      $this->access = $this->password->getToken('username', 'password');
 
       // returns AccessToken with same Client
-      $this->assertEquals($this->client, $this->access->client);
+      $this->assertEquals($this->client, $this->access->getClient());
 
       // returns AccessToken with $token
-      $this->assertEquals('salmon', $this->access->token);
+      $this->assertEquals('salmon', $this->access->getToken());
 
       // returns AccessToken with $refresh_token
-      $this->assertEquals('trout', $this->access->refresh_token);
+      $this->assertEquals('trout', $this->access->getRefreshToken());
 
       // returns AccessToken with $expires_in
-      $this->assertEquals(600, $this->access->expires_in);
+      $this->assertEquals(600, $this->access->getExpiresIn());
 
       // eturns AccessToken with $expires_at
-      $this->assertNotNull($this->access->expires_at);
+      $this->assertNotNull($this->access->getExpiresAt());
     }
   }
 

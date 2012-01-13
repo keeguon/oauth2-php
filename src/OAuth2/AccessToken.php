@@ -4,15 +4,14 @@ namespace OAuth2;
 
 class AccessToken
 {
-  public
-      $client        = null
-    , $expires_at = null
-    , $expires_in    = null
-    , $token      = null
-    , $options    = array()
-    , $params     = array()
-    , $refresh_token = null
-  ;
+  public $options = array();
+
+  protected $client       = null;
+  protected $expiresAt    = null;
+  protected $expiresIn    = null;
+  protected $params       = array();
+  protected $refreshToken = null;
+  protected $token        = null;
 
  /**
   * Initializes an AccessToken from a Hash
@@ -21,7 +20,7 @@ class AccessToken
   * @param  array          $hash   Array of AccessToken property values
   * @return \OAuth2\AccessToken
   */
-  public static function from_hash($client, $hash)
+  public static function fromHash($client, $hash)
   {
     // Clumsy PHP token handling
     $token = $hash['access_token'];
@@ -37,12 +36,12 @@ class AccessToken
   * @param  string         $kvform The application/x-www-form-urlencoded string
   * @return \OAuth2\AccessToken
   */
-  public static function from_kvform($client, $kvform)
+  public static function fromKvform($client, $kvform)
   {
     // Parse key/value application/x-www-form-urlencoded string into a hash
     parse_str($kvform, $hash);
 
-    return \OAuth2\AccessToken::from_hash($client, $hash);
+    return \OAuth2\AccessToken::fromHash($client, $hash);
   }
   
  /**
@@ -68,13 +67,17 @@ class AccessToken
     $this->client = $client;
     $this->token  = $token;
     foreach (array('refresh_token', 'expires_in', 'expires_at') as $arg) {
-      $this->$arg = $opts[$arg];
+      // camelize arg
+      $camelizedArg = lcfirst(str_replace(" ", "", ucwords(strtr($arg, "_-", "  "))));
+
+      // set property
+      $this->$camelizedArg = $opts[$arg];
       unset($opts[$arg]);
     }
     
-    $this->expires_in = isset($opts['expires']) ? (int) $opts['expires'] : (int) $this->expires_in;
-    if ($this->expires_in) {
-      $this->expires_at = $this->expires_at ? $this->expires_at : time() + $this->expires_in;
+    $this->expiresIn = isset($opts['expires']) ? (int) $opts['expires'] : (int) $this->expiresIn;
+    if ($this->expiresIn) {
+      $this->expiresAt = $this->expiresAt ? $this->expiresAt : time() + $this->expiresIn;
     }
     unset($opts['expires']);
 
@@ -89,23 +92,73 @@ class AccessToken
   }
 
  /**
-  * Make a DELETE request with the Access Token
+  * client getter
   *
-  * @see request
+  * @return OAuth2\Client
   */
-  public function delete($path, $opts = array())
+  public function getClient()
   {
-    return $this->request('DELETE', $path, $opts);
+    return $this->client;
   }
- 
+
  /**
-  * Whether or not the token is expired
+  * expiresAt getter
   *
-  * @return boolean
+  * @return mixed
   */
-  public function is_expired()
+  public function getExpiresAt()
   {
-    return $this->expires() && ($this->expires_at < time());
+    return $this->expiresAt;
+  }
+
+ /**
+  * expiresIn getter
+  *
+  * @return mixed
+  */
+  public function getExpiresIn()
+  {
+    return $this->expiresIn;
+  }
+
+ /**
+  * params getter
+  *
+  * @return array
+  */
+  public function getParams()
+  {
+    return $this->params;
+  }
+
+ /**
+  * param getter
+  *
+  * @return mixed
+  */
+  public function getParam($key)
+  {
+    return isset($this->params[$key]) ? $this->params[$key] : null;
+  }
+
+ /**
+  * refreshToken getter
+  *
+  * @return mixed
+  */
+  public function getRefreshToken()
+  {
+    return $this->refreshToken;
+  }
+
+ /**
+  * token getter
+  *
+  * @return mixed
+  */
+  public function getToken()
+  {
+    return $this->token;
   }
 
  /**
@@ -115,9 +168,33 @@ class AccessToken
   */
   public function expires()
   {
-    return !is_null($this->expires_at);
+    return !is_null($this->expiresAt);
   }
- 
+
+ /**
+  * Whether or not the token is expired
+  *
+  * @return boolean
+  */
+  public function isExpired()
+  {
+    return $this->expires() && ($this->expiresAt < time());
+  }
+
+ /**
+  * Make a request with the Access Token
+  *
+  * @param string $verb The HTTP request method
+  * @param string $path The HTTP URL path of the request
+  * @param array  $opts The options to make the request with
+  * @see Client::request
+  */
+  public function request($verb, $path, $opts = array())
+  {
+    $opts = $this->setToken($opts);
+    return $this->client->request($verb, $path, $opts);
+  }
+
  /**
   * Make a GET request with the Access Token
   *
@@ -149,6 +226,16 @@ class AccessToken
   }
 
  /**
+  * Make a DELETE request with the Access Token
+  *
+  * @see request
+  */
+  public function delete($path, $opts = array())
+  {
+    return $this->request('DELETE', $path, $opts);
+  }
+
+ /**
   * Refreshes the current Access Token
   *
   * @param  array               $params
@@ -156,38 +243,24 @@ class AccessToken
   */
   public function refresh($params = array())
   {
-    if (!$this->refresh_token) {
+    if (!$this->refreshToken) {
       throw new \ErrorException("A refresh_token is not available");
     }
 
     array_merge($params, array(
-        'client_id'     => $this->client->id
-      , 'client_secret' => $this->client->secret
+        'client_id'     => $this->client->getId()
+      , 'client_secret' => $this->client->getSecret()
       , 'grant_type'    => 'refresh_token'
-      , 'refresh_token' => $this->refresh_token
+      , 'refresh_token' => $this->refreshToken
     ));
 
-    $new_token = $this->client->get_token($params);
-    $new_token->options = $this->options;
-    return $new_token;
-  }
-
- /**
-  * Make a request with the Access Token
-  *
-  * @param string $verb The HTTP request method
-  * @param string $path The HTTP URL path of the request
-  * @param array  $opts The options to make the request with
-  * @see Client::request
-  */
-  public function request($verb, $path, $opts = array())
-  {
-    $opts = $this->set_token($opts);
-    return $this->client->request($verb, $path, $opts);
+    $newToken = $this->client->getToken($params);
+    $newToken->options = $this->options;
+    return $newToken;
   }
 
 
-  private function set_token($opts)
+  private function setToken($opts)
   {
     switch ($this->options['mode']) {
       case 'header':

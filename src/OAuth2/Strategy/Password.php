@@ -7,7 +7,7 @@ class Password extends \OAuth2\Strategy\Base
  /**
   * Not used for this strategy
   */
-  public function authorize_url()
+  public function authorizeUrl()
   {
     throw new \ErrorException('The authorization endpoint is not used in this strategy.');
   }
@@ -20,13 +20,13 @@ class Password extends \OAuth2\Strategy\Base
   * @param array  $params   Additional params
   * @param array  $opts     Options 
   */
-  public function get_token($username, $password, $params = array(), $opts = array())
+  public function getToken($username, $password, $params = array(), $opts = array())
   {
     $params = array_merge(array(
         'grant_type' => 'password'
       , 'username'   => $username
       , 'password'   => $password
-    ), $this->client_params(), $params);
-    return $this->client->get_token($params, $opts);
+    ), $this->clientParams(), $params);
+    return $this->client->getToken($params, $opts);
   }
 }

@@ -4,13 +4,12 @@ namespace OAuth2;
 
 class Client
 {
-  public
-      $connection = null
-    , $id         = ''
-    , $options    = ''
-    , $secret     = ''
-    , $site       = ''
-  ;
+  public $connection = null;
+  public $options    = '';
+  public $site       = '';
+  
+  protected $id     = '';
+  protected $secret = '';
 
   public function __construct($client_id, $client_secret, $opts = array())
   {
@@ -34,16 +33,25 @@ class Client
     // Connection object using Guzzle
     $this->connection = new \Guzzle\Service\Client($this->site);
   }
+ 
+ /**
+  * id getter
+  *
+  * @return string
+  */
+  public function getId()
+  {
+    return $this->id;
+  }
 
  /**
-  * The Authorization Code strategy
+  * secret getter
   *
-  * @return \OAuth2\Strategy\AuthCode
+  * @return string
   */
-  public function auth_code()
+  public function getSecret()
   {
-    $this->auth_code = isset($this->auth_code) ? $this->auth_code : new \OAuth2\Strategy\AuthCode($this);
-    return $this->auth_code;
+    return $this->secret;
   }
 
  /**
@@ -52,68 +60,24 @@ class Client
   * @param  array $params Additional query parameters
   * @return string
   */
-  public function authorize_url($params = array())
+  public function authorizeUrl($params = array())
   {
-    $authorize_url = (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'] : $this->site.$this->options['authorize_url'];
-    return (count($params)) ? $authorize_url.'?'.http_build_query($params) : $authorize_url;
+    $authorizeUrl = (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'] : $this->site.$this->options['authorize_url'];
+    return (count($params)) ? $authorizeUrl.'?'.http_build_query($params) : $authorizeUrl;
   }
 
  /**
-  * Initializes an AccessToken by making a request to the token endpoint
+  * The token endpoint URL of the OAuth2 provider
   *
-  * @param  array $params An array of params for the token endpoint
-  * @param  array $access Token options, to pass to the AccessToken object
-  * @return \OAuth2\AccessToken
+  * @param  array $params Additional query parameters
+  * @return string
   */
-  public function get_token($params = array(), $access_token_opts = array())
+  public function tokenUrl($params = array())
   {
-    $opts = array(
-        'raise_errors' => true
-      , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
-    );
-    unset($params['parse']);
-    
-    if ($this->options['token_method'] === 'POST') {
-      $opts['params']  = $params;
-      $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
-    } else {
-      $opts['params'] = http_build_query($params);
-    }
-
-    // Make request
-    $response = $this->request($this->options['token_method'], $this->token_url(), $opts);
-    
-    // Handle response
-    $parsedResponse = $response->parse();
-    if (!is_array($parsedResponse) && !isset($parsedResponse['access_token'])) {
-      throw new \OAuth2\Error($response);
-    }
-
-    // Return access token
-    return \OAuth2\AccessToken::from_hash($this, array_merge($parsedResponse, $access_token_opts));
+    $tokenUrl = (strpos($this->options['token_url'], 'http') === 0) ? $this->options['token_url'] : $this->site.$this->options['token_url'];
+    return (count($params)) ? $tokenUrl.'?'.http_build_query($params) : $tokenUrl;
   }
 
- /**
-  * The Resource Owner Password Credentials strategy
-  *
-  * @return \OAuth2\Strategy\Password
-  */
-  public function password()
-  {
-    $this->password = $this->password ? $this->password : new \OAuth2\Strategy\Password($this);
-    return $this->password;
-  }
-
- /**
-  * Return either an empty array or an array containing the redirect_uri
-  *
-  * @return array
-  */
-  public function redirect_uri()
-  {
-    return isset($this->options['redirect_uri']) ? array('redirect_uri' => $this->options['redirect_uri']) : array();
-  }
-  
  /**
   * Makes a request relative to the specified site root.
   *
@@ -182,14 +146,59 @@ class Client
   }
 
  /**
-  * The token endpoint URL of the OAuth2 provider
+  * Initializes an AccessToken by making a request to the token endpoint
   *
-  * @param  array $params Additional query parameters
-  * @return string
+  * @param  array $params An array of params for the token endpoint
+  * @param  array $access Token options, to pass to the AccessToken object
+  * @return \OAuth2\AccessToken
   */
-  public function token_url($params = array())
+  public function getToken($params = array(), $access_token_opts = array())
   {
-    $token_url = (strpos($this->options['token_url'], 'http') === 0) ? $this->options['token_url'] : $this->site.$this->options['token_url'];
-    return (count($params)) ? $token_url.'?'.http_build_query($params) : $token_url;
+    $opts = array(
+        'raise_errors' => true
+      , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
+    );
+    unset($params['parse']);
+    
+    if ($this->options['token_method'] === 'POST') {
+      $opts['params']  = $params;
+      $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
+    } else {
+      $opts['params'] = http_build_query($params);
+    }
+
+    // Make request
+    $response = $this->request($this->options['token_method'], $this->tokenUrl(), $opts);
+    
+    // Handle response
+    $parsedResponse = $response->parse();
+    if (!is_array($parsedResponse) && !isset($parsedResponse['access_token'])) {
+      throw new \OAuth2\Error($response);
+    }
+
+    // Return access token
+    return \OAuth2\AccessToken::fromHash($this, array_merge($parsedResponse, $access_token_opts));
+  }
+
+ /**
+  * The Authorization Code strategy
+  *
+  * @return \OAuth2\Strategy\AuthCode
+  */
+  public function authCode()
+  {
+    $this->authCode = isset($this->authCode) ? $this->authCode : new \OAuth2\Strategy\AuthCode($this);
+    return $this->authCode;
+  }
+
+ /**
+  * The Resource Owner Password Credentials strategy
+  *
+  * @return \OAuth2\Strategy\Password
+  */
+  public function password()
+  {
+    $this->password = $this->password ? $this->password : new \OAuth2\Strategy\Password($this);
+    return $this->password;
   }
 }

@@ -4,12 +4,10 @@ namespace OAuth2;
 
 class Response
 {
-  protected
-      $options  = array()
-    , $response = null
-  ;
-
-  public $error = null;
+  public $error   = null;
+  public $options = array();
+  
+  protected $response = null;
 
   public function __construct($response, $opts = array())
   {
@@ -17,19 +15,29 @@ class Response
     $this->options  = array_merge(array('parse' => 'automatic'), $opts);
   }
 
-  public function body()
+ /**
+  * response getter
+  *
+  * @return Guzzle\Http\Message\Response
+  */
+  public function getResponse()
   {
-    return $this->response->getBody(true);
-  }
-
-  public function content_type()
-  {
-    return $this->response->getContentType();
+    return $this->response;
   }
 
   public function headers()
   {
     return $this->response->getHeaders()->getAll();
+  }
+
+  public function status()
+  {
+    return $this->response->getStatusCode();
+  }
+  
+  public function body()
+  {
+    return $this->response->getBody(true);
   }
 
   public function parse()
@@ -60,8 +68,8 @@ class Response
     return $parsed;
   }
 
-  public function status()
+  public function content_type()
   {
-    return $this->response->getStatusCode();
+    return $this->response->getContentType();
   }
 }

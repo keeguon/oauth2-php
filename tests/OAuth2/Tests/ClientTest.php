@@ -9,11 +9,9 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   * @var string
   * @var string
   */
-  protected
-      $client                  = null
-    , $error_value             = 'invalid_token'
-    , $error_description_value = 'bad bad token'
-  ;
+  protected $client                = null;
+  protected $errorValue            = 'invalid_token';
+  protected $errorDescriptionValue = 'bad bad token';
 
  /**
   * Sets up the fixture, here, creating a new client.
@@ -41,8 +39,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   public function testConstructorBuildsClient()
   {
     // client id and secret should be assigned
-    $this->assertEquals('abc', $this->client->id);
-    $this->assertEquals('def', $this->client->secret);
+    $this->assertEquals('abc', $this->client->getId());
+    $this->assertEquals('def', $this->client->getSecret());
 
     // client site should be assigned
     $this->assertEquals('https://api.example.com', $this->client->site);
@@ -72,17 +70,17 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   */
   public function testUrlsEnpoints()
   {
-    foreach (array('authorize', 'token') as $url_type) {
+    foreach (array('authorize', 'token') as $urlType) {
       // {$url_type}_url should default to /oauth/{$url_type}
-      $this->assertEquals("https://api.example.com/oauth/{$url_type}", call_user_func(array($this->client, "{$url_type}_url")));
+      $this->assertEquals("https://api.example.com/oauth/{$urlType}", call_user_func(array($this->client, "{$urlType}Url")));
 
       // {$url_type}_url should be settable via the {$url_type}_url option
-      $this->client->options["{$url_type}_url"] = '/oauth/custom';
-      $this->assertEquals("https://api.example.com/oauth/custom", call_user_func(array($this->client, "{$url_type}_url")));
+      $this->client->options["{$urlType}_url"] = '/oauth/custom';
+      $this->assertEquals("https://api.example.com/oauth/custom", call_user_func(array($this->client, "{$urlType}Url")));
 
       // allows a different host than the site
-      $this->client->options["{$url_type}_url"] = 'https://api.foo.com/oauth/custom';
-      $this->assertEquals("https://api.foo.com/oauth/custom", call_user_func(array($this->client, "{$url_type}_url")));
+      $this->client->options["{$urlType}_url"] = 'https://api.foo.com/oauth/custom';
+      $this->assertEquals("https://api.foo.com/oauth/custom", call_user_func(array($this->client, "{$urlType}Url")));
     }
   }
 
@@ -131,25 +129,25 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
     // test if exception are thrown when raise_errors is true
     $this->client->options['raise_errors'] = true;
-    foreach (array('/unauthorized', '/conflict', '/error') as $error_path) {
-      // throw OAuth\Error on error response to path {$error_path}
+    foreach (array('/unauthorized', '/conflict', '/error') as $errorPath) {
+      // throw OAuth\Error on error response to path {$errorPath}
       $this->setExpectedException('\OAuth2\Error');
-      $this->client->request('GET', $error_path);
+      $this->client->request('GET', $errorPath);
     }
 
     // parses OAuth2 standard error response
     try {
       $this->client->request('GET', '/error');
     } catch (\OAuth2\Error $e) {
-      $this->assertEquals($this->error_value, $e->getCode());
-      $this->assertEquals($this->error_description_value, $e->getDescription());
+      $this->assertEquals($this->errorValue, $e->getCode());
+      $this->assertEquals($this->errorDescriptionValue, $e->getDescription());
     }
 
     // provides the response in the Exception
     try {
       $this->client->request('GET', '/error');
     } catch (\OAuth2\Error $e) {
-      $this->assertNotNull($e->response);
+      $this->assertNotNull($e->getResponse());
     }
   }
 
@@ -159,7 +157,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   public function testAuthCodeInstatiation()
   {
     // auth_code() should instantiate a AuthCode strategy with this client
-    $this->assertInstanceOf("\OAuth2\Strategy\AuthCode", $this->client->auth_code());
+    $this->assertInstanceOf("\OAuth2\Strategy\AuthCode", $this->client->authCode());
   }
 
  /**
@@ -182,7 +180,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
     $map['GET']['/success']      = array('status' => 200, 'headers' => array('Content-Type' => 'text/awesome'), 'body' => 'yay');
     $map['GET']['/reflect']      = array('status' => 200, 'headers' => array(), 'body' => $opts['body']);
     $map['POST']['/reflect']     = array('status' => 200, 'headers' => array(), 'body' => $opts['body']);
-    $map['GET']['/unauthorized'] = array('status' => 401, 'headers' => array('Content-Type' => 'application/json'), 'body' => json_encode(array('error' => $this->error_value, 'error_description' => $this->error_description_value)));
+    $map['GET']['/unauthorized'] = array('status' => 401, 'headers' => array('Content-Type' => 'application/json'), 'body' => json_encode(array('error' => $this->errorValue, 'error_description' => $this->errorDescriptionValue)));
     $map['GET']['/conflict']     = array('status' => 409, 'headers' => array('Content-Type' => 'text/plain'), 'body' => 'not authorized');
     $map['GET']['/redirect']     = array('status' => 302, 'headers' => array('Content-Type' => 'text/plain', 'location' => '/success'), 'body' => '');
     $map['POST']['/redirect']    = array('status' => 303, 'headers' => array('Content-Type' => 'text/plain', 'location' => '/reflect'), 'body' => '');

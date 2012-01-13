@@ -4,16 +4,14 @@ namespace OAuth2\Tests\Strategy;
 
 class AuthCodeTest extends \PHPUnit_Framework_TestCase
 {
-  protected
-      $code           = 'sushi'
-    , $mode           = ''
-    , $kvform_token   = ''
-    , $facebook_token = ''
-    , $json_token     = ''
-    , $client         = null
-    , $auth_code      = null
-    , $access         = null
-  ;
+  protected $access        = null;
+  protected $authCode      = null;
+  protected $client        = null;
+  protected $code          = 'sushi';
+  protected $facebookToken = '';
+  protected $jsonToken     = '';
+  protected $kvformToken   = '';
+  protected $mode          = '';
 
  /**
   * Set up fixtures
@@ -21,9 +19,9 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
   protected function setUp()
   {
     // set tokens
-    $this->kvform_token   = 'expires_in=600&access_token=salmon&refresh_token=trout&extra_param=steve';
-    $this->facebook_token = preg_replace('/_in/i', '', $this->kvform_token);
-    $this->json_token     = json_encode(array('expires_in' => 600, 'access_token' => 'salmon', 'refresh_token' => 'trout', 'extra_param' => 'steve'));
+    $this->kvformToken   = 'expires_in=600&access_token=salmon&refresh_token=trout&extra_param=steve';
+    $this->facebookToken = preg_replace('/_in/i', '', $this->kvformToken);
+    $this->jsonToken     = json_encode(array('expires_in' => 600, 'access_token' => 'salmon', 'refresh_token' => 'trout', 'extra_param' => 'steve'));
 
     // mock client
     $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
@@ -34,19 +32,19 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
                  ->will($this->returnCallback(array($this, 'mockRequest')));
 
     // create auth_code
-    $this->auth_code = new \OAuth2\Strategy\AuthCode($this->client);
+    $this->authCode = new \OAuth2\Strategy\AuthCode($this->client);
   }
 
   protected function tearDown()
   {
-    unset($this->code);
-    unset($this->mode);
-    unset($this->kvform_token);
-    unset($this->facebook_token);
-    unset($this->json_token);
-    unset($this->client);
-    unset($this->auth_code);
+    unset($this->authCode);
     unset($this->access);
+    unset($this->client);
+    unset($this->code);
+    unset($this->jsonToken);
+    unset($this->facebookToken);
+    unset($this->kvformToken);
+    unset($this->mode);
   }
 
  /**
@@ -55,14 +53,14 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
   public function testAuthorizeUrl()
   {
     // should include the client_id
-    $this->assertContains('client_id=abc', $this->auth_code->authorize_url());
+    $this->assertContains('client_id=abc', $this->authCode->authorizeUrl());
 
     // should include the type
-    $this->assertContains('response_type=code', $this->auth_code->authorize_url());
+    $this->assertContains('response_type=code', $this->authCode->authorizeUrl());
 
     // should include passed in options
     $cb = 'http://myserver.local/oauth/callback';
-    $this->assertContains('redirect_uri='.urlencode($cb), $this->auth_code->authorize_url(array('redirect_uri' => $cb)));
+    $this->assertContains('redirect_uri='.urlencode($cb), $this->authCode->authorizeUrl(array('redirect_uri' => $cb)));
   }
 
  /**
@@ -77,26 +75,26 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
       foreach (array('GET', 'POST') as $verb) {
         // set token_method and get token
         $this->client->options['token_method'] = $verb;
-        $this->access = $this->auth_code->get_token($this->code);
+        $this->access = $this->authCode->getToken($this->code);
       }
 
       // returns AccessToken with same Client
-      $this->assertEquals($this->client, $this->access->client);
+      $this->assertEquals($this->client, $this->access->getClient());
 
       // returns AccessToken with $token
-      $this->assertEquals('salmon', $this->access->token);
+      $this->assertEquals('salmon', $this->access->getToken());
 
       // returns AccessToken with $refresh_token
-      $this->assertEquals('trout', $this->access->refresh_token);
+      $this->assertEquals('trout', $this->access->getRefreshToken());
 
       // returns AccessToken with $expires_in
-      $this->assertEquals(600, $this->access->expires_in);
+      $this->assertEquals(600, $this->access->getExpiresIn());
 
       // returns AccessToken with $expires_at
-      $this->assertInternalType('integer', $this->access->expires_at);
+      $this->assertInternalType('integer', $this->access->getExpiresAt());
 
       // returns AccessToken with params accessible via the params array
-      $this->assertEquals('steve', $this->access->params['extra_param']);
+      $this->assertEquals('steve', $this->access->getParam('extra_param'));
     }
   }
 
@@ -110,9 +108,9 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
 
     // map responses
     $map = array(
-        'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->kvform_token)
-      , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->json_token)
-      , 'from_facebook' => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->facebook_token)
+        'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->kvformToken)
+      , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->jsonToken)
+      , 'from_facebook' => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->facebookToken)
     );
 
     return new \OAuth2\Response($map[$this->mode]);
