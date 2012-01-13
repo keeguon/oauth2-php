@@ -105,6 +105,7 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
   */
   public function mockRequest()
   {
+    // retrieve args
     $args = func_get_args();
 
     // map responses
