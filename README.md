@@ -15,7 +15,7 @@ A PHP library aimed to consume services using OAuth 2 as a security scheme.
 
 To install OAuth2-PHP with composer you simply need to create a composer.json in your project root and add:
 
-```
+```json
 {
     "require": {
         "keeguon/oauth2-php": ">=1.0.0"
@@ -25,7 +25,7 @@ To install OAuth2-PHP with composer you simply need to create a composer.json in
 
 Then run
 
-```
+```bash
 $ wget -nc http://getcomposer.org/composer.phar
 $ php composer.phar install
 ```
@@ -41,7 +41,9 @@ The library is fully tested with PHPUnit for unit tests. To run tests you need P
 
 Go to the base library folder and run the test suites
 
-    $ phpunit
+```bash
+$ phpunit
+```
 
 
 ## License
