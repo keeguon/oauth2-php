@@ -12,8 +12,14 @@
          bootstrap="tests/bootstrap.php"
 >
   <testsuites>
-    <testsuite name="Silex Test Suite">
-      <directory>./tests/OAuth2/</directory>
+    <testsuite name="OAuth2 Test Suite">
+      <directory>tests/OAuth2/</directory>
     </testsuite>
   </testsuites>
+
+  <filter>
+    <whitelist>
+      <directory suffix=".php">src/OAuth2/</directory>
+    </whitelist>
+  </filter>
 </phpunit>

@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests\Strategy;
 
-class AuthCodeTest extends \PHPUnit_Framework_TestCase
+class AuthCodeTest extends \OAuth2\Tests\TestCase
 {
   protected $access        = null;
   protected $authCode      = null;
@@ -23,15 +23,10 @@ class AuthCodeTest extends \PHPUnit_Framework_TestCase
     $this->facebookToken = preg_replace('/_in/i', '', $this->kvformToken);
     $this->jsonToken     = json_encode(array('expires_in' => 600, 'access_token' => 'salmon', 'refresh_token' => 'trout', 'extra_param' => 'steve'));
 
-    // mock client
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
+    // get client stub
+    $this->client = $this->getClientStub('abc', 'def', array('site' => 'https://api.example.com'));
 
-    // configure mock
-    $this->client->expects($this->any())
-                 ->method('request')
-                 ->will($this->returnCallback(array($this, 'mockRequest')));
-
-    // create auth_code
+    // create authCode
     $this->authCode = new \OAuth2\Strategy\AuthCode($this->client);
   }
 

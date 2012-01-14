@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests\Strategy;
 
-class PasswordTest extends \PHPUnit_Framework_TestCase
+class PasswordTest extends \OAuth2\Tests\TestCase
 {
   protected $access   = null;
   protected $client   = null;
@@ -14,13 +14,8 @@ class PasswordTest extends \PHPUnit_Framework_TestCase
   */
   protected function setUp()
   {
-    // mock client
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
-
-    // configure mock
-    $this->client->expects($this->any())
-                 ->method('request')
-                 ->will($this->returnCallback(array($this, 'mockRequest')));
+    // get client stub
+    $this->client = $this->getClientStub('abc', 'def', array('site' => 'https://api.example.com'));
 
     // create password
     $this->password = new \OAuth2\Strategy\Password($this->client);

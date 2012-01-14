@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests\Strategy;
 
-class BaseTest extends \PHPUnit_Framework_TestCase
+class BaseTest extends \OAuth2\Tests\TestCase
 {
   /**
    * @covers OAuth2\Strategy\Base::construct()

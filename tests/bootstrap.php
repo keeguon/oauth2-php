@@ -1,8 +1,15 @@
 <?php
 
-namespace OAuth2\Tests;
+if (false === class_exists('Symfony\Component\ClassLoader\UniversalClassLoader', false)) {
+  require_once __DIR__.'/../vendor/Symfony/Component/ClassLoader/UniversalClassLoader.php';
+}
 
-error_reporting(E_ALL | E_STRICT);
+use Symfony\Component\ClassLoader\UniversalClassLoader;
 
-require_once 'PHPUnit/TextUI/TestRunner.php';
-require_once __DIR__.'/../autoload.php';
+$loader = new UniversalClassLoader();
+$loader->registerNamespaces(array(
+    'Symfony'       => __DIR__.'/../vendor'
+  , 'Guzzle'        => __DIR__.'/../vendor/guzzle/src'
+  , 'OAuth2'        => array(__DIR__.'/../src', __DIR__)
+));
+$loader->register();

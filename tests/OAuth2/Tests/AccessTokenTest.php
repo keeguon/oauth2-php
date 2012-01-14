@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests;
 
-class AccessTokenTest extends \PHPUnit_Framework_TestCase
+class AccessTokenTest extends \OAuth2\Tests\TestCase
 {
  /**
   * @var OAuth2\AccessToken
@@ -27,13 +27,8 @@ class AccessTokenTest extends \PHPUnit_Framework_TestCase
     $this->tokenBody   = json_encode(array('access_token' => 'foo', 'expires_in' => 600, 'refresh_token' => 'bar'));
     $this->refreshBody = json_encode(array('access_token' => 'refreshed_foo', 'expires_in' => 600, 'refresh_token' => 'refresh_bar'));
 
-    // mock client object
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
-
-    // configure mocked client
-    $this->client->expects($this->any())
-                 ->method('request')
-                 ->will($this->returnCallback(array($this, 'mockRequest')));
+    // get client stub
+    $this->client = $this->getClientStub('abc', 'def', array('site' => 'https://api.example.com'));
 
     // instantiate access_token
     $this->accessToken = new \OAuth2\AccessToken($this->client, $this->token);

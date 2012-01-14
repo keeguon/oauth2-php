@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests;
 
-class ClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends \OAuth2\Tests\TestCase
 {
  /**
   * @var OAuth2\Client
@@ -19,13 +19,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
   */
   protected function setUp()
   {
-    // mock client object
-    $this->client = $this->getMock('\OAuth2\Client', array('request'), array('abc', 'def', array('site' => 'https://api.example.com')));
-    
-    // configure mocked client
-    $this->client->expects($this->any())
-                 ->method('request')
-                 ->will($this->returnCallback(array($this, 'mockRequest')));
+    // get client stub
+    $this->client = $this->getClientStub('abc', 'def', array('site' => 'https://api.example.com'));
   }
 
   protected function tearDown()

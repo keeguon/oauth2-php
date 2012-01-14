@@ -2,7 +2,7 @@
 
 namespace OAuth2\Tests;
 
-class ResponseTest extends \PHPUnit_Framework_TestCase
+class ResponseTest extends \OAuth2\Tests\TestCase
 {
  /**
   * @var OAuth2\Response
