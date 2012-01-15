@@ -11,10 +11,10 @@ class Client
   protected $id     = '';
   protected $secret = '';
 
-  public function __construct($client_id, $client_secret, $opts = array())
+  public function __construct($clientId, $clientSecret, $opts = array())
   {
-    $this->id     = $client_id;
-    $this->secret = $client_secret;
+    $this->id     = $clientId;
+    $this->secret = $clientSecret;
     if (isset($opts['site'])) {
       $this->site = $opts['site'];
       unset($opts['site']);
