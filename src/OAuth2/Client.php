@@ -152,7 +152,7 @@ class Client
   * @param  array $access Token options, to pass to the AccessToken object
   * @return \OAuth2\AccessToken
   */
-  public function getToken($params = array(), $access_token_opts = array())
+  public function getToken($params = array(), $tokenOpts = array())
   {
     $opts = array(
         'raise_errors' => true
@@ -177,7 +177,7 @@ class Client
     }
 
     // Return access token
-    return \OAuth2\AccessToken::fromHash($this, array_merge($parsedResponse, $access_token_opts));
+    return \OAuth2\AccessToken::fromHash($this, array_merge($parsedResponse, $tokenOpts));
   }
 
  /**
