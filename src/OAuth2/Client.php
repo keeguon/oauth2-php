@@ -160,11 +160,9 @@ class Client
     );
     unset($params['parse']);
     
+    $opts['params']  = $params;
     if ($this->options['token_method'] === 'POST') {
-      $opts['params']  = $params;
       $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
-    } else {
-      $opts['params'] = http_build_query($params);
     }
 
     // Make request
