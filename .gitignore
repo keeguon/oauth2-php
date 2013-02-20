@@ -2,8 +2,11 @@
 .DS_Store
 *.sw[a-z]
 
-# Other files
-composer.phar
+# Ignore potentially sensitive phpunit file
 phpunit.xml
 
-# Folders
+# Ignore composer generated files
+composer.phar
+composer.lock
+composer-test.lock
+vendor/

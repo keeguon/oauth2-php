@@ -18,7 +18,7 @@ class ResponseTest extends \OAuth2\Tests\TestCase
   public function testConstructorBuildsResponse()
   {
     $status  = 200;
-    $headers = array('foo' => 'bar');
+    $headers = array('foo' => array('bar'));
     $body    = 'foo';
 
     // returns the status, headers and body

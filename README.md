@@ -7,7 +7,7 @@ A PHP library aimed to consume services using OAuth 2 as a security scheme.
 ## Dependencies
 
 * PHP >=5.3.2
-* Guzzle >=1.0.3
+* Guzzle
 
 
 ## Installation
@@ -38,12 +38,16 @@ And an handy autoload file to include in you project in vendor/.composer/autoloa
 
 ## Testing
 
-The library is fully tested with PHPUnit for unit tests. To run tests you need PHPUnit installed on your system.
-
-Go to the base library folder and run the test suites
+The library is fully tested with PHPUnit for unit tests. To run tests you need PHPUnit which can be installed using the project dependencies as follows:
 
 ```bash
-$ phpunit
+$ php composer.phar install --dev
+```
+
+Then to run the test suites
+
+```bash
+$ vendor/bin/phpunit
 ```
 
 

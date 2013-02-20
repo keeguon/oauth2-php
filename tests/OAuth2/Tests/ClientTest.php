@@ -91,7 +91,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $response = $this->client->request('GET', '/success');
     $this->assertEquals('yay', $response->body());
     $this->assertEquals(200, $response->status());
-    $this->assertEquals(array('Content-Type' => 'text/awesome'), $response->headers());
+    $this->assertEquals(array('Content-Type' => array('text/awesome')), $response->headers());
 
     // posts a body
     $response = $this->client->request('POST', '/reflect', array('body' => 'foo=bar'));
@@ -101,7 +101,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $response = $this->client->request('GET', '/redirect');
     $this->assertEquals('yay', $response->body());
     $this->assertEquals(200, $response->status());
-    $this->assertEquals(array('Content-Type' => 'text/awesome'), $response->headers());
+    $this->assertEquals(array('Content-Type' => array('text/awesome')), $response->headers());
 
     // redirects using GET on a 303
     $response = $this->client->request('POST', '/redirect', array('body' => 'foo=bar'));
@@ -119,7 +119,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->client->options['raise_errors'] = false;
     $response = $this->client->request('GET', '/unauthorized');
     $this->assertEquals(401, $response->status());
-    $this->assertEquals(array('Content-Type' => 'application/json'), $response->headers());
+    $this->assertEquals(array('Content-Type' => array('application/json')), $response->headers());
     $this->assertNotNull($response->error);
 
     // test if exception are thrown when raise_errors is true
@@ -202,7 +202,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
         $opts['body'] = '';
       }
       $headers = $response->headers();
-      return $this->client->request($args[0], $headers['location'], $opts);
+      return $this->client->request($args[0], $headers['location'][0], $opts);
     } else if (in_array($response->status(), range(400, 599))) {
       $e = new \OAuth2\Error($response);
       if ($opts['raise_errors'] || $this->client->options['raise_errors']) {
