@@ -23,11 +23,14 @@ class ResponseTest extends \OAuth2\Tests\TestCase
 
     // returns the status, headers and body
     $this->response = new \OAuth2\Response(new \Guzzle\Http\Message\Response($status, $headers, $body));
-    $this->assertEquals($headers, $this->response->headers());
+    $responseHeaders = $this->response->headers();
+    $this->assertCount(1, $responseHeaders);
+    $this->assertArrayHasKey('foo', $responseHeaders);
+    $this->assertEquals($headers['foo'], $responseHeaders['foo']->toArray());
     $this->assertEquals($status, $this->response->status());
     $this->assertEquals($body, $this->response->body());
   }
-  
+
  /**
   * @covers OAuth2\Response::content_type()
   * @covers OAuth2\Response::parse()
