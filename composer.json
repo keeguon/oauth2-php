@@ -4,13 +4,17 @@
   , "description": "A library to consume services using the OAuth 2 security scheme."
   , "keywords": ["oauth2"]
   , "homepage": "https://github.com/Keeguon/oauth2-php"
-  , "version": "1.2.0"
+  , "version": "1.2.1"
   , "license": "MIT"
   , "authors": [
         {
             "name":     "Félix Bellanger"
           , "email":    "felix.bellanger@gmail.com"
-          , "homepage": "http://felixbellanger.com"
+          , "homepage": "https://github.com/Keeguon"
+        },
+        {
+            "name": "Martin Jantošovič"
+          , "homepage": "https://github.com/Mordred"
         }
     ]
   , "require": {
