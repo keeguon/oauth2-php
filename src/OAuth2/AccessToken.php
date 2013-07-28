@@ -247,7 +247,7 @@ class AccessToken
       throw new \ErrorException("A refresh_token is not available");
     }
 
-    array_merge($params, array(
+    $params = array_merge($params, array(
         'client_id'     => $this->client->getId()
       , 'client_secret' => $this->client->getSecret()
       , 'grant_type'    => 'refresh_token'
