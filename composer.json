@@ -4,7 +4,7 @@
   , "description": "A library to consume services using the OAuth 2 security scheme."
   , "keywords": ["oauth2"]
   , "homepage": "https://github.com/Keeguon/oauth2-php"
-  , "version": "1.2.1"
+  , "version": "1.2.2"
   , "license": "MIT"
   , "authors": [
         {
@@ -15,6 +15,11 @@
         {
             "name": "Martin Jantošovič"
           , "homepage": "https://github.com/Mordred"
+        },
+        {
+            "name": "Cyrus David"
+          , "email": "david@jcyr.us"
+          , "homepage": "https://github.com/vohof"
         }
     ]
   , "require": {
