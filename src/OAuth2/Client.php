@@ -196,7 +196,7 @@ class Client
   */
   public function password()
   {
-    $this->password = $this->password ? $this->password : new \OAuth2\Strategy\Password($this);
+    $this->password = isset($this->password) ? $this->password : new \OAuth2\Strategy\Password($this);
     return $this->password;
   }
 }
