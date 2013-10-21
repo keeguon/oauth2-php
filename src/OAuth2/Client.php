@@ -159,6 +159,9 @@ class Client
       , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
     );
     unset($params['parse']);
+
+    $params['client_id'] = $this->getId();
+    $params['client_secret'] = $this->getSecret();
     
     $opts['params']  = $params;
     if ($this->options['token_method'] === 'POST') {
