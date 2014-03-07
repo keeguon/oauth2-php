@@ -55,11 +55,17 @@ class Response
 
       case 'automatic':
       default:
-        if (in_array($this->content_type(), array('application/json', 'text/javascript'))) {
-          $parsed = json_decode($this->body(), true);
+        $types = array('application/json', 'text/javascript');
+        $content_type = $this->content_type();
+
+        foreach ($types as $type) {
+          if (stripos($content_type, $type) !== false) {
+            $parsed = json_decode($this->body(), true);
+            break;
+          }
         }
 
-        if ($this->content_type() === "application/x-www-form-urlencoded") {
+        if (stripos($content_type, "application/x-www-form-urlencoded") !== false) {
           parse_str($this->body(), $parsed);
         }
         break;
