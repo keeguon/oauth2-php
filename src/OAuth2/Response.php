@@ -27,7 +27,7 @@ class Response
 
   public function headers()
   {
-    return $this->response->getHeaders()->getAll();
+    return $this->response->getHeaders();
   }
 
   public function status()
@@ -76,6 +76,6 @@ class Response
 
   public function content_type()
   {
-    return $this->response->getContentType();
+    return $this->response->getHeader('Content-Type');
   }
 }

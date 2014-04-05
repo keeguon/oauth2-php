@@ -75,8 +75,8 @@ class PasswordTest extends \OAuth2\Tests\TestCase
 
     // map responses
     $map = array(
-        'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), 'expires_in=600&access_token=salmon&refresh_token=trout')
-      , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), '{"expires_in":600,"access_token":"salmon","refresh_token":"trout"}')
+        'formencoded'   => new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), \GuzzleHttp\Stream\Stream::factory('expires_in=600&access_token=salmon&refresh_token=trout'))
+      , 'json'          => new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\Stream\Stream::factory('{"expires_in":600,"access_token":"salmon","refresh_token":"trout"}'))
     );
     
     return new \OAuth2\Response($map[$this->mode]);

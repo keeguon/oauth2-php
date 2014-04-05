@@ -16,7 +16,7 @@ class Client
     $this->id     = $clientId;
     $this->secret = $clientSecret;
     if (isset($opts['site'])) {
-      $this->site = $opts['site'];
+      $this->site = ['base_url' => $opts['site']];
       unset($opts['site']);
     }
 
@@ -31,7 +31,7 @@ class Client
     ), $opts);
 
     // Connection object using Guzzle
-    $this->connection = new \Guzzle\Service\Client($this->site);
+    $this->connection = new \GuzzleHttp\Client($this->site);
   }
  
  /**
@@ -62,7 +62,7 @@ class Client
   */
   public function authorizeUrl($params = array())
   {
-    $authorizeUrl = (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'] : $this->site.$this->options['authorize_url'];
+    $authorizeUrl = (strpos($this->options['authorize_url'], 'http') === 0) ? $this->options['authorize_url'] : $this->site['base_url'].$this->options['authorize_url'];
     return (count($params)) ? $authorizeUrl.'?'.http_build_query($params) : $authorizeUrl;
   }
 
@@ -74,7 +74,7 @@ class Client
   */
   public function tokenUrl($params = array())
   {
-    $tokenUrl = (strpos($this->options['token_url'], 'http') === 0) ? $this->options['token_url'] : $this->site.$this->options['token_url'];
+    $tokenUrl = (strpos($this->options['token_url'], 'http') === 0) ? $this->options['token_url'] : $this->site['base_url'].$this->options['token_url'];
     return (count($params)) ? $tokenUrl.'?'.http_build_query($params) : $tokenUrl;
   }
 

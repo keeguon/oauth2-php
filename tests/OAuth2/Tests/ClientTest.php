@@ -38,7 +38,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals('def', $this->client->getSecret());
 
     // client site should be assigned
-    $this->assertEquals('https://api.example.com', $this->client->site);
+    $this->assertEquals(['base_url' => 'https://api.example.com'], $this->client->site);
 
     // connection baseUrl should be assigned
     $this->assertEquals('https://api.example.com', $this->client->connection->getBaseUrl());
@@ -85,7 +85,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
   public function testRequest()
   {
     // works with a null response body
-    $this->assertEmpty($this->client->request('GET', '/empty_get')->body());
+    $this->assertEmpty((string) $this->client->request('GET', '/empty_get')->body());
 
     // returns on a successful response body
     $response = $this->client->request('GET', '/success');
@@ -93,8 +93,8 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals(200, $response->status());
     $headers = $response->headers();
     $this->assertCount(1, $headers);
-    $this->assertArrayHasKey('content-type', $headers);
-    $this->assertEquals(array('text/awesome'), $headers['content-type']->toArray());
+    $this->assertArrayHasKey('Content-Type', $headers);
+    $this->assertEquals(array('text/awesome'), $headers['Content-Type']);
 
     // posts a body
     $response = $this->client->request('POST', '/reflect', array('body' => 'foo=bar'));
@@ -106,12 +106,12 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals(200, $response->status());
     $headers = $response->headers();
     $this->assertCount(1, $headers);
-    $this->assertArrayHasKey('content-type', $headers);
-    $this->assertEquals(array('text/awesome'), $headers['content-type']->toArray());
+    $this->assertArrayHasKey('Content-Type', $headers);
+    $this->assertEquals(array('text/awesome'), $headers['Content-Type']);
 
     // redirects using GET on a 303
     $response = $this->client->request('POST', '/redirect', array('body' => 'foo=bar'));
-    $this->assertEmpty($response->body());
+    $this->assertEquals('foo=bar', $response->body());
     $this->assertEquals(200, $response->status());
 
     // obeys the max_redirects option
@@ -127,8 +127,8 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals(401, $response->status());
     $headers = $response->headers();
     $this->assertCount(1, $headers);
-    $this->assertArrayHasKey('content-type', $headers);
-    $this->assertEquals(array('application/json'), $headers['content-type']->toArray());
+    $this->assertArrayHasKey('Content-Type', $headers);
+    $this->assertEquals(array('application/json'), $headers['Content-Type']);
     $this->assertNotNull($response->error);
 
     // test if exception are thrown when raise_errors is true
@@ -195,7 +195,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $response = $map[$args[0]][$args[1]];
 
     // wrap response in an OAuth2\Response object
-    $response = new \OAuth2\Response(new \Guzzle\Http\Message\Response($response['status'], $response['headers'], $response['body']));
+    $response = new \OAuth2\Response(new \GuzzleHttp\Message\Response($response['status'], $response['headers'], \GuzzleHttp\Stream\Stream::factory($response['body'])));
 
     // handle response
     if (in_array($response->status(), range(200, 299))) {
@@ -211,7 +211,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
         $opts['body'] = '';
       }
       $headers = $response->headers();
-      $location = $headers['location']->toArray();
+      $location = $headers['location'];
       return $this->client->request($args[0], $location[0], $opts);
     } else if (in_array($response->status(), range(400, 599))) {
       $e = new \OAuth2\Error($response);

@@ -103,9 +103,9 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
 
     // map responses
     $map = array(
-        'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->kvformToken)
-      , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->jsonToken)
-      , 'from_facebook' => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->facebookToken)
+        'formencoded'   => new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), \GuzzleHttp\Stream\Stream::factory($this->kvformToken))
+      , 'json'          => new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\Stream\Stream::factory($this->jsonToken))
+      , 'from_facebook' => new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), \GuzzleHttp\Stream\Stream::factory($this->facebookToken))
     );
 
     return new \OAuth2\Response($map[$this->mode]);

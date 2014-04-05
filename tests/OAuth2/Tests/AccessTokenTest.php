@@ -87,21 +87,21 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
     $this->accessToken->options['mode'] = 'header';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the Authorization header for a {$verb} request
-      $this->assertContains($this->token, $this->accessToken->request($verb, '/token/header')->body());
+      $this->assertContains($this->token, (string) $this->accessToken->request($verb, '/token/header')->body());
     }
 
     // query mode
     $this->accessToken->options['mode'] = 'query';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the query params for a {$verb} request
-      $this->assertEquals($this->token, $this->accessToken->request($verb, '/token/query')->body());
+      $this->assertEquals($this->token, (string) $this->accessToken->request($verb, '/token/query')->body());
     }
-    
+
     // body mode
     $this->accessToken->options['mode'] = 'body';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the body for a {$verb} request
-      $data = array_reverse(explode('=', $this->accessToken->request($verb, '/token/body')->body()));
+      $data = array_reverse(explode('=', (string) $this->accessToken->request($verb, '/token/body')->body()));
       $this->assertEquals($this->token, $data[0]);
     }
   }
@@ -166,20 +166,20 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
     switch ($args[1]) {
       case '/token/header':
         $body = sprintf($this->accessToken->options['header_format'], $this->accessToken->getToken());
-        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $body));
+        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array(), \GuzzleHttp\Stream\Stream::factory($body)));
         break;
 
       case '/token/query':
-        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $this->accessToken->getToken()));
+        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array(), \GuzzleHttp\Stream\Stream::factory($this->accessToken->getToken())));
         break;
 
       case '/token/body':
         $body = "{$this->accessToken->options['param_name']}={$this->accessToken->getToken()}";
-        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array(), $body));
+        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array(), \GuzzleHttp\Stream\Stream::factory($body)));
         break;
 
       case 'https://api.example.com/oauth/token':
-        return new \OAuth2\Response(new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->refreshBody));
+        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\Stream\Stream::factory($this->refreshBody)));
         break;
     }
   }
