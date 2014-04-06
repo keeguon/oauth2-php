@@ -15,13 +15,13 @@ class TestCase extends \PHPUnit_Framework_TestCase
   public function getClientStub($client_id, $client_secret, $opts = array())
   {
     // create a client stub
-    $client = $this->getMock('\OAuth2\Client', array('request'), array($client_id, $client_secret, $opts));
+    $client = $this->getMock('\OAuth2\Client', ['getResponse'], [$client_id, $client_secret, $opts]);
 
     // configure client stub
     $client->expects($this->any())
-           ->method('request')
-           ->will($this->returnCallback(array($this, 'mockRequest')));
-    
+           ->method('getResponse')
+           ->will($this->returnCallback([$this, 'mockGetResponse']));
+
     return $client;
   }
 }

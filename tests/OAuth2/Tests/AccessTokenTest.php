@@ -63,7 +63,7 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
     $this->assertInitializeToken($target);
 
     // initalizes with a form-urlencoded key/value string
-    $kvform = "access_token={$this->token}&expires_at={time() + 200}&foo=bar";
+    $kvform = "access_token={$this->token}&expires_in={time() + 200}&foo=bar";
     $target = \OAuth2\AccessToken::fromKvform($this->client, $kvform);
     $this->assertInitializeToken($target);
 
@@ -87,21 +87,21 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
     $this->accessToken->options['mode'] = 'header';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the Authorization header for a {$verb} request
-      $this->assertContains($this->token, (string) $this->accessToken->request($verb, '/token/header')->body());
+      $this->assertContains($this->token, $this->accessToken->request($verb, '/token/header')->body());
     }
 
     // query mode
     $this->accessToken->options['mode'] = 'query';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the query params for a {$verb} request
-      $this->assertEquals($this->token, (string) $this->accessToken->request($verb, '/token/query')->body());
+      $this->assertEquals($this->token, $this->accessToken->request($verb, '/token/query')->body());
     }
 
     // body mode
     $this->accessToken->options['mode'] = 'body';
     foreach (array('GET', 'POST', 'PUT', 'DELETE') as $verb) {
       // sends the token in the body for a {$verb} request
-      $data = array_reverse(explode('=', (string) $this->accessToken->request($verb, '/token/body')->body()));
+      $data = array_reverse(explode('=', $this->accessToken->request($verb, '/token/body')->body()));
       $this->assertEquals($this->token, $data[0]);
     }
   }
@@ -111,16 +111,12 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
   */
   public function testExpires()
   {
-    // should be false if there is no expires_at
+    // should be false if expires_in is null
     $target = new \OAuth2\AccessToken($this->client, $this->token);
     $this->assertFalse($target->expires());
 
     // should be true if there is an expires_in
     $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_in' => 600));
-    $this->assertTrue($target->expires());
-
-    // should be true if there is an expires_at
-    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_at' => time() + 600));
     $this->assertTrue($target->expires());
   }
 
@@ -136,10 +132,6 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
     // should be false if expires_in is in the future
     $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_in' => 10800));
     $this->assertFalse($target->isExpired());
-
-    // should be true if expires_at is in the past
-    $target = new \OAuth2\AccessToken($this->client, $this->token, array('refresh_token' => 'abaca', 'expires_at' => time() - 600));
-    $this->assertTrue($target->isExpired());
   }
 
  /**
@@ -155,15 +147,15 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
   }
 
  /**
-  * Intercept all OAuth2\Client::request() calls and mock their responses
+  * Intercept all OAuth2\Client::getResponse() calls and mock their responses
   */
-  public function mockRequest()
+  public function mockGetResponse()
   {
     // retrieve args
     $args = func_get_args();
 
     // create response based on mode
-    switch ($args[1]) {
+    switch ($args[0]->getPath()) {
       case '/token/header':
         $body = sprintf($this->accessToken->options['header_format'], $this->accessToken->getToken());
         return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array(), \GuzzleHttp\Stream\Stream::factory($body)));
@@ -174,12 +166,12 @@ class AccessTokenTest extends \OAuth2\Tests\TestCase
         break;
 
       case '/token/body':
-        $body = "{$this->accessToken->options['param_name']}={$this->accessToken->getToken()}";
+        $body = $this->accessToken->options['param_name'] . '=' . $this->accessToken->getToken();
         return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array(), \GuzzleHttp\Stream\Stream::factory($body)));
         break;
 
-      case 'https://api.example.com/oauth/token':
-        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, array('Content-Type' => 'application/json'), \GuzzleHttp\Stream\Stream::factory($this->refreshBody)));
+      case '/oauth/token':
+        return new \OAuth2\Response(new \GuzzleHttp\Message\Response(200, ['Content-Type' => 'application/json'], \GuzzleHttp\Stream\Stream::factory($this->refreshBody)));
         break;
     }
   }

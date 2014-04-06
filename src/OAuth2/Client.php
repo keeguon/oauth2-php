@@ -7,7 +7,7 @@ class Client
   public $connection = null;
   public $options    = '';
   public $site       = '';
-  
+
   protected $id     = '';
   protected $secret = '';
 
@@ -21,19 +21,17 @@ class Client
     }
 
     // Default options
-    $this->options = array_merge(array(
-        'authorize_url'   => '/oauth/authorize'
-      , 'token_url'       => '/oauth/token'
-      , 'token_method'    => 'POST'
-      , 'connection_opts' => array()
-      , 'max_redirects'   => 5
-      , 'raise_errors'    => true
-    ), $opts);
+    $this->options = array_merge([
+        'authorize_url' => '/oauth/authorize'
+      , 'token_url'     => '/oauth/token'
+      , 'token_method'  => 'POST'
+      , 'request_opts'  => [ 'exceptions' => true ]
+    ], $opts);
 
     // Connection object using Guzzle
     $this->connection = new \GuzzleHttp\Client($this->site);
   }
- 
+
  /**
   * id getter
   *
@@ -83,66 +81,35 @@ class Client
   *
   * @param string $verb One of the following http method: GET, POST, PUT, DELETE
   * @param string $url  URL path of the request
-  * @param array  $opts The options to make the request with (possible options: params (array), body (string), headers (array), raise_errors (boolean), parse ('automatic', 'query' or 'json')
+  * @param array  $opts The options to make the request with (possible options: params (array), body (string), headers (array), exceptions (boolean), parse ('automatic', 'query' or 'json')
+  * @return \GuzzleHttp\Message\Request
   */
-  public function request($verb, $url, $opts = array())
+  public function createRequest($verb, $url, $opts = array())
   {
     // Set some default options
     $opts = array_merge(array(
-        'params'       => array()
-      , 'body'         => ''
-      , 'headers'      => array()
-      , 'raise_errors' => $this->options['raise_errors']
-      , 'parse'        => 'automatic'
-    ), $opts);
+        'body'       => ''
+      , 'query'     => array()
+      , 'headers'    => array()
+    ), $this->options['request_opts'], $opts);
 
     // Create the request
-    switch ($verb) {
-      case 'DELETE':
-        $request = $this->connection->delete($url, $opts['headers']);
-        $request->getQuery()->merge($opts['params']);
-        break;
-      case 'POST':
-        $request = $this->connection->post($url, $opts['headers'], $opts['params']);
-        break;
-      case 'PUT':
-        $request = $this->connection->put($url, $opts['headers'], $opts['body']);
-        break;
-      case 'GET':
-      default:
-        $request = $this->connection->get($url, $opts['headers'], $opts['body']);
-        $request->getQuery()->merge($opts['params']);
-        break;
-    }
+    $verb = (in_array($verb, ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']) ? $verb : 'GET');
+    $request = $this->connection->createRequest($verb, $url, $opts);
 
-    // Send request and use the returned HttpMessage to create an \OAuth2\Response object
-    $response = new \OAuth2\Response($request->send(), array('parse' => $opts['parse']));
+    return $request;
+  }
 
-    // Response handling
-    if (in_array($response->status(), range(200, 299))) {
-      return $response;
-    } else if (in_array($response->status(), range(300, 399))) {
-      $opts['redirect_count'] = $opts['redirect_count'] || 0;
-      $opts['redirect_count'] += 1;
-      if ($opts['redirect_count'] > $this->options['max_redirects']) {
-        return $response;
-      }
-      if ($response->status() === 303) {
-        $verb = 'GET';
-        $opts['body'] = '';
-      }
-      $headers = $response->headers();
-      $this->request($verb, $headers['location'], $opts);
-    } else if (in_array($response->status(), range(400, 599))) {
-      $e = new \OAuth2\Error($response);
-      if ($opts['raise_errors'] || $this->options['raise_errors']) {
-        throw $e;
-      }
-      $response->error = $e;
-      return $response;
-    } else {
-      throw new \OAuth2\Error($response);
-    }
+ /**
+  * Initializes an AccessToken by making a request to the token endpoint
+  *
+  * @param  \GuzzleHttp\Message\Request $request   The request object
+  * @param  string                      $parseMode The mode of parsing for the response
+  * @return \OAuth2\Response
+  */
+  public function getResponse($request, $parseMode = 'automatic')
+  {
+    return new \OAuth2\Response($this->connection->send($request), $parseMode);
   }
 
  /**
@@ -154,20 +121,24 @@ class Client
   */
   public function getToken($params = array(), $tokenOpts = array())
   {
-    $opts = array(
-        'raise_errors' => true
-      , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
-    );
+    // Get parse mode for the response
+    $parseMode = isset($params['parse']) ? $params['parse'] : 'automatic';
     unset($params['parse']);
-    
-    $opts['params']  = $params;
+
+    $opts['query'] = $params;
     if ($this->options['token_method'] === 'POST') {
       $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
     }
 
-    // Make request
-    $response = $this->request($this->options['token_method'], $this->tokenUrl(), $opts);
-    
+    // Create request
+    $request = $this->createRequest($this->options['token_method'], $this->tokenUrl(), $opts);
+
+    // Set auth
+    $request->setHeader('Authorization', 'Basic ' . base64_encode("$this->id:$this->secret"));
+
+    // Get response
+    $response = $this->getResponse($request, $parseMode);
+
     // Handle response
     $parsedResponse = $response->parse();
     if (!is_array($parsedResponse) && !isset($parsedResponse['access_token'])) {
@@ -200,3 +171,4 @@ class Client
     return $this->password;
   }
 }
+
