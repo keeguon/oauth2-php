@@ -114,7 +114,7 @@ class Client
   public function getResponse($request, array $opts = array())
   {
     // Send request and use the returned HttpMessage to create an \OAuth2\Response object
-    $response = new \OAuth2\Response($request->send(), $opts['parse']);
+    $response = new \OAuth2\Response($request->send(), (isset($params['parse']) ? $params['parse'] : 'automatic'));
 
     // Response handling
     if (in_array($response->status(), range(200, 299))) {
