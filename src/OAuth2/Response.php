@@ -4,15 +4,15 @@ namespace OAuth2;
 
 class Response
 {
-  public $error   = null;
-  public $options = array();
-  
+  public $error     = null;
+  public $parseMode = array();
+
   protected $response = null;
 
-  public function __construct($response, $opts = array())
+  public function __construct($response, $parseMode = 'automatic')
   {
-    $this->response = $response;
-    $this->options  = array_merge(array('parse' => 'automatic'), $opts);
+    $this->response  = $response;
+    $this->parseMode = $parseMode;
   }
 
  /**
@@ -44,7 +44,7 @@ class Response
   {
     $parsed = null;
 
-    switch ($this->options['parse']) {
+    switch ($this->parseMode) {
       case 'json':
         $parsed = json_decode($this->body(), true);
         break;
