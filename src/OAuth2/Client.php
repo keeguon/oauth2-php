@@ -97,7 +97,7 @@ class Client
     $opts['request_opts'] = isset($opts['request_opts']) ? array_merge($this->options['request_opts'], $opts['request_opts']) : $this->options['request_opts'];
 
     // Create the request
-    $verb    = (in_array($verb, ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']) ? $verb : 'GET');
+    $verb    = (in_array($verb, array('GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH')) ? $verb : 'GET');
     $request = $this->connection->createRequest($verb, $uri, $opts['headers'], $opts['body'], $opts['request_opts']);
     $request->getQuery()->merge($opts['params']);
 
