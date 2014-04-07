@@ -4,7 +4,7 @@
   , "description": "A library to consume services using the OAuth 2 security scheme."
   , "keywords": ["oauth2"]
   , "homepage": "https://github.com/Keeguon/oauth2-php"
-  , "version": "1.2.5"
+  , "version": "1.2.6"
   , "license": "MIT"
   , "authors": [
         {
@@ -24,7 +24,7 @@
     ]
   , "require": {
         "php": ">=5.3.3"
-      , "guzzle/guzzle": "~3.8"
+      , "guzzle/guzzle": "~3.8.1"
     }
   , "autoload": {
         "psr-0": {
