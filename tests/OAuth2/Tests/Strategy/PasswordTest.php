@@ -59,16 +59,13 @@ class PasswordTest extends \OAuth2\Tests\TestCase
 
       // returns AccessToken with $expires_in
       $this->assertEquals(600, $this->access->getExpiresIn());
-
-      // eturns AccessToken with $expires_at
-      $this->assertNotNull($this->access->getExpiresAt());
     }
   }
 
  /**
-  * Intercept all OAuth2\Client::request() calls and mock their responses
+  * Intercept all OAuth2\Client::getResponse() calls and mock their responses
   */
-  public function mockRequest()
+  public function mockGetResponse()
   {
     // retrieve args
     $args = func_get_args();
@@ -78,7 +75,7 @@ class PasswordTest extends \OAuth2\Tests\TestCase
         'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), 'expires_in=600&access_token=salmon&refresh_token=trout')
       , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), '{"expires_in":600,"access_token":"salmon","refresh_token":"trout"}')
     );
-    
+
     return new \OAuth2\Response($map[$this->mode]);
   }
 }

@@ -7,7 +7,6 @@ class AccessToken
   public $options = array();
 
   protected $client       = null;
-  protected $expiresAt    = null;
   protected $expiresIn    = null;
   protected $params       = array();
   protected $refreshToken = null;
@@ -43,7 +42,7 @@ class AccessToken
 
     return \OAuth2\AccessToken::fromHash($client, $hash);
   }
-  
+
  /**
   * Creates an AccessToken
   *
@@ -57,7 +56,6 @@ class AccessToken
     $opts = array_merge(array(
         'refresh_token' => null           // string  The refresh_token value
       , 'expires_in'    => null           // integer The number of seconds in which the AccessToken will expire
-      , 'expires_at'    => null           // integer The epoch time in seconds in which AccessToken will expire
       , 'mode'          => 'header'       // string  The transmission mode of the Access Token parameter value one of 'header', 'body' or 'query'
       , 'header_format' => 'Bearer %s'    // string  The string format to use for the Authorization header
       , 'param_name'    => 'bearer_token' // string  he parameter name to use for transmission of the Access Token value in 'body' or 'query' transmission mode
@@ -66,7 +64,7 @@ class AccessToken
     // Setting class attributes
     $this->client = $client;
     $this->token  = $token;
-    foreach (array('refresh_token', 'expires_in', 'expires_at') as $arg) {
+    foreach (array('refresh_token', 'expires_in') as $arg) {
       // camelize arg
       $camelizedArg = lcfirst(str_replace(" ", "", ucwords(strtr($arg, "_-", "  "))));
 
@@ -74,12 +72,6 @@ class AccessToken
       $this->$camelizedArg = $opts[$arg];
       unset($opts[$arg]);
     }
-    
-    $this->expiresIn = isset($opts['expires']) ? (int) $opts['expires'] : (int) $this->expiresIn;
-    if ($this->expiresIn) {
-      $this->expiresAt = $this->expiresAt ? $this->expiresAt : time() + $this->expiresIn;
-    }
-    unset($opts['expires']);
 
     $this->options = array(
         'mode'          => $opts['mode']
@@ -99,16 +91,6 @@ class AccessToken
   public function getClient()
   {
     return $this->client;
-  }
-
- /**
-  * expiresAt getter
-  *
-  * @return mixed
-  */
-  public function getExpiresAt()
-  {
-    return $this->expiresAt;
   }
 
  /**
@@ -168,7 +150,7 @@ class AccessToken
   */
   public function expires()
   {
-    return !is_null($this->expiresAt);
+    return !is_null($this->expiresIn);
   }
 
  /**
@@ -178,7 +160,7 @@ class AccessToken
   */
   public function isExpired()
   {
-    return $this->expires() && ($this->expiresAt < time());
+    return $this->expires() && ($this->expiresIn === 0);;
   }
 
  /**
@@ -191,8 +173,20 @@ class AccessToken
   */
   public function request($verb, $path, $opts = array())
   {
+    // Create request
     $opts = $this->setToken($opts);
-    return $this->client->request($verb, $path, $opts);
+    $request = $this->client->createRequest($verb, $path, array(
+        'params'  => isset($opts['params']) ? $opts['params'] : array()
+      , 'headers' => isset($opts['headers']) ? $opts['headers'] : array()
+      , 'body'    => isset($opts['body']) ? $opts['body'] : array()
+    ));
+    foreach (array('params', 'headers', 'body') as $v) {
+      if (isset($opts[$v])) {
+        unset($opts[$v]);
+      }
+    }
+
+    return $this->client->getResponse($request, $opts);
   }
 
  /**
@@ -204,7 +198,7 @@ class AccessToken
   {
     return $this->request('GET', $path, $opts);
   }
-  
+
  /**
   * Make a POST request with the Access Token
   *
@@ -214,7 +208,7 @@ class AccessToken
   {
     return $this->request('POST', $path, $opts);
   }
-  
+
  /**
   * Make a PUT request with the Access Token
   *
@@ -248,9 +242,7 @@ class AccessToken
     }
 
     $params = array_merge($params, array(
-        'client_id'     => $this->client->getId()
-      , 'client_secret' => $this->client->getSecret()
-      , 'grant_type'    => 'refresh_token'
+        'grant_type'    => 'refresh_token'
       , 'refresh_token' => $this->refreshToken
     ));
 

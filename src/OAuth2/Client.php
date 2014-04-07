@@ -7,7 +7,7 @@ class Client
   public $connection = null;
   public $options    = '';
   public $site       = '';
-  
+
   protected $id     = '';
   protected $secret = '';
 
@@ -22,12 +22,12 @@ class Client
 
     // Default options
     $this->options = array_merge(array(
-        'authorize_url'   => '/oauth/authorize'
-      , 'token_url'       => '/oauth/token'
-      , 'token_method'    => 'POST'
-      , 'connection_opts' => array()
-      , 'max_redirects'   => 5
-      , 'raise_errors'    => true
+        'authorize_url' => '/oauth/authorize'
+      , 'token_url'     => '/oauth/token'
+      , 'token_method'  => 'POST'
+      , 'request_opts'  => array()
+      , 'max_redirects' => 5
+      , 'raise_errors'  => true
     ), $opts);
 
     // Connection object using Guzzle
@@ -82,57 +82,68 @@ class Client
   * Makes a request relative to the specified site root.
   *
   * @param string $verb One of the following http method: GET, POST, PUT, DELETE
-  * @param string $url  URL path of the request
+  * @param string $uri  URI path of the request
   * @param array  $opts The options to make the request with (possible options: params (array), body (string), headers (array), raise_errors (boolean), parse ('automatic', 'query' or 'json')
+  * @return \Guzzle\Http\Message\Request
   */
-  public function request($verb, $url, $opts = array())
+  public function createRequest($verb, $uri, $opts = array())
   {
     // Set some default options
     $opts = array_merge(array(
         'params'       => array()
       , 'body'         => ''
       , 'headers'      => array()
-      , 'raise_errors' => $this->options['raise_errors']
-      , 'parse'        => 'automatic'
     ), $opts);
+    $opts['request_opts'] = isset($opts['request_opts']) ? array_merge($this->options['request_opts'], $opts['request_opts']) : $this->options['request_opts'];
 
     // Create the request
-    switch ($verb) {
-      case 'DELETE':
-        $request = $this->connection->delete($url, $opts['headers']);
-        $request->getQuery()->merge($opts['params']);
-        break;
-      case 'POST':
-        $request = $this->connection->post($url, $opts['headers'], $opts['params']);
-        break;
-      case 'PUT':
-        $request = $this->connection->put($url, $opts['headers'], $opts['body']);
-        break;
-      case 'GET':
-      default:
-        $request = $this->connection->get($url, $opts['headers'], $opts['body']);
-        $request->getQuery()->merge($opts['params']);
-        break;
-    }
+    $verb    = (in_array($verb, ['GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH']) ? $verb : 'GET');
+    $request = $this->connection->createRequest($verb, $uri, $opts['headers'], $opts['body'], $opts['request_opts']);
+    $request->getQuery()->merge($opts['params']);
 
+    return $request;
+  }
+
+ /**
+  * Initializes an AccessToken by making a request to the token endpoint
+  *
+  * @param  \Guzzle\Http\Message\Request $request The request object
+  * @param  array                        $options An array of options to handle the response
+  * @return \OAuth2\Response
+  */
+  public function getResponse($request, array $opts = array())
+  {
     // Send request and use the returned HttpMessage to create an \OAuth2\Response object
-    $response = new \OAuth2\Response($request->send(), array('parse' => $opts['parse']));
+    $response = new \OAuth2\Response($request->send(), $opts['parse']);
 
     // Response handling
     if (in_array($response->status(), range(200, 299))) {
+      // Reset redirect count for future requests since we reached something
+      $this->options['redirect_count'] = 0;
+
       return $response;
     } else if (in_array($response->status(), range(300, 399))) {
-      $opts['redirect_count'] = $opts['redirect_count'] || 0;
-      $opts['redirect_count'] += 1;
-      if ($opts['redirect_count'] > $this->options['max_redirects']) {
+      // Count redirects
+      $this->options['redirect_count'] = $this->options['redirect_count'] || 0;
+      $this->options['redirect_count'] += 1;
+      if ($this->options['redirect_count'] > $this->options['max_redirects']) {
         return $response;
       }
+
+      // Get vars to make the redirect
       if ($response->status() === 303) {
         $verb = 'GET';
-        $opts['body'] = '';
+        $body = '';
       }
       $headers = $response->headers();
-      $this->request($verb, $headers['location'], $opts);
+
+      // Create redirected request and get response
+      $request = $this->createRequest($verb ? $verb : $request->getMethod, $headers['location'], array(
+          'params'  => $request->getQuery()
+        , 'headers' => $request->getHeaders()
+        , 'body'    => $body ? $body : $request->getResponseBody()
+      ));
+      return $this->getResponse($request, $opts);
     } else if (in_array($response->status(), range(400, 599))) {
       $e = new \OAuth2\Error($response);
       if ($opts['raise_errors'] || $this->options['raise_errors']) {
@@ -156,18 +167,24 @@ class Client
   {
     $opts = array(
         'raise_errors' => true
-      , 'parse' => isset($params['parse']) ? $params['parse'] : 'automatic'
+      , 'parse'        => isset($params['parse']) ? $params['parse'] : 'automatic'
     );
     unset($params['parse']);
-    
-    $opts['params']  = $params;
+
     if ($this->options['token_method'] === 'POST') {
-      $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
+      $headers = array('Content-Type' => 'x-www-form-urlencoded');
     }
 
     // Make request
-    $response = $this->request($this->options['token_method'], $this->tokenUrl(), $opts);
-    
+    $request = $this->createRequest($this->options['token_method'], $this->tokenUrl(), array(
+        'params'  => $params
+      , 'headers' => isset($headers) ? $headers : array()
+    ));
+    $request->setAuth($this->id, $this->secret);
+
+    // Get response
+    $response = $this->getResponse($request, $opts);
+
     // Handle response
     $parsedResponse = $response->parse();
     if (!is_array($parsedResponse) && !isset($parsedResponse['access_token'])) {

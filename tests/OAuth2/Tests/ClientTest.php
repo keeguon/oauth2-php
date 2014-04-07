@@ -85,10 +85,12 @@ class ClientTest extends \OAuth2\Tests\TestCase
   public function testRequest()
   {
     // works with a null response body
-    $this->assertEmpty($this->client->request('GET', '/empty_get')->body());
+    $request = $this->client->createRequest('GET', '/empty_get');
+    $this->assertEmpty($this->client->getResponse($request)->body());
 
     // returns on a successful response body
-    $response = $this->client->request('GET', '/success');
+    $request  = $this->client->createRequest('GET', '/success');
+    $response = $this->client->getResponse($request);
     $this->assertEquals('yay', $response->body());
     $this->assertEquals(200, $response->status());
     $headers = $response->headers();
@@ -97,11 +99,13 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals(array('text/awesome'), $headers['content-type']->toArray());
 
     // posts a body
-    $response = $this->client->request('POST', '/reflect', array('body' => 'foo=bar'));
+    $request  = $this->client->createRequest('POST', '/reflect', array('body' => 'foo=bar'));
+    $response = $this->client->getResponse($request);
     $this->assertEquals('foo=bar', $response->body());
 
     // follows redirect properly
-    $response = $this->client->request('GET', '/redirect');
+    $request  = $this->client->createRequest('GET', '/redirect');
+    $response = $this->client->getResponse($request);
     $this->assertEquals('yay', $response->body());
     $this->assertEquals(200, $response->status());
     $headers = $response->headers();
@@ -110,20 +114,23 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $this->assertEquals(array('text/awesome'), $headers['content-type']->toArray());
 
     // redirects using GET on a 303
-    $response = $this->client->request('POST', '/redirect', array('body' => 'foo=bar'));
+    $request  = $this->client->createRequest('POST', '/redirect', array('body' => 'foo=bar'));
+    $response = $this->client->getResponse($request);
     $this->assertEmpty($response->body());
     $this->assertEquals(200, $response->status());
 
     // obeys the max_redirects option
     $max_redirects = $this->client->options['max_redirects'];
     $this->client->options['max_redirects'] = 0;
-    $response = $this->client->request('GET', '/redirect');
+    $request  = $this->client->createRequest('GET', '/redirect');
+    $response = $this->client->getResponse($request);
     $this->assertEquals(302, $response->status());
     $this->client->options['max_redirects'] = $max_redirects;
 
     // returns if raise_errors is false
     $this->client->options['raise_errors'] = false;
-    $response = $this->client->request('GET', '/unauthorized');
+    $request  = $this->client->createRequest('GET', '/unauthorized');
+    $response = $this->client->getResponse($request);
     $this->assertEquals(401, $response->status());
     $headers = $response->headers();
     $this->assertCount(1, $headers);
@@ -134,14 +141,16 @@ class ClientTest extends \OAuth2\Tests\TestCase
     // test if exception are thrown when raise_errors is true
     $this->client->options['raise_errors'] = true;
     foreach (array('/unauthorized', '/conflict', '/error') as $errorPath) {
+      $request = $this->client->createRequest('GET', $errorPath);
+
       // throw OAuth\Error on error response to path {$errorPath}
       $this->setExpectedException('\OAuth2\Error');
-      $this->client->request('GET', $errorPath);
+      $this->client->getResponse($request);
     }
 
     // parses OAuth2 standard error response
     try {
-      $this->client->request('GET', '/error');
+      $this->client->createRequest('GET', '/error');
     } catch (\OAuth2\Error $e) {
       $this->assertEquals($this->errorValue, $e->getCode());
       $this->assertEquals($this->errorDescriptionValue, $e->getDescription());
@@ -149,7 +158,7 @@ class ClientTest extends \OAuth2\Tests\TestCase
 
     // provides the response in the Exception
     try {
-      $this->client->request('GET', '/error');
+      $this->client->createRequest('GET', '/error');
     } catch (\OAuth2\Error $e) {
       $this->assertNotNull($e->getResponse());
     }
@@ -165,25 +174,25 @@ class ClientTest extends \OAuth2\Tests\TestCase
   }
 
  /**
-  * Intercept all OAuth2\Client::request() calls and mock their responses
+  * Intercept all OAuth2\Client::getResponse() calls and mock their responses
   */
-  public function mockRequest()
+  public function mockGetResponse()
   {
     // retrieve arguments
     $args = func_get_args();
 
     // default options
     $opts = array_merge(array(
-        'body'         => ''
-      , 'headers'      => array()
-      , 'raise_errors' => $this->client->options['raise_errors']
-    ), $args[2]);
+      'raise_errors' => $this->client->options['raise_errors']
+    ), $args[1]);
 
     // map routes
     $map = array();
     $map['GET']['/success']      = array('status' => 200, 'headers' => array('Content-Type' => 'text/awesome'), 'body' => 'yay');
-    $map['GET']['/reflect']      = array('status' => 200, 'headers' => array(), 'body' => $opts['body']);
-    $map['POST']['/reflect']     = array('status' => 200, 'headers' => array(), 'body' => $opts['body']);
+    $map['GET']['/reflect']      = array('status' => 200, 'headers' => array(), 'body' => $args[0]->getResponseBody());
+    if ($args[0]->getMethod() === 'POST' && $args[0]->getPath() === '/reflect') {
+      $map['POST']['/reflect']     = array('status' => 200, 'headers' => array(), 'body' => (string) $args[0]->getBody());
+    }
     $map['GET']['/unauthorized'] = array('status' => 401, 'headers' => array('Content-Type' => 'application/json'), 'body' => json_encode(array('error' => $this->errorValue, 'error_description' => $this->errorDescriptionValue)));
     $map['GET']['/conflict']     = array('status' => 409, 'headers' => array('Content-Type' => 'text/plain'), 'body' => 'not authorized');
     $map['GET']['/redirect']     = array('status' => 302, 'headers' => array('Content-Type' => 'text/plain', 'location' => '/success'), 'body' => '');
@@ -192,27 +201,39 @@ class ClientTest extends \OAuth2\Tests\TestCase
     $map['GET']['/empty_get']    = array('status' => 200, 'headers' => array(), 'body' => '');
 
     // match response
-    $response = $map[$args[0]][$args[1]];
+    $response = $map[$args[0]->getMethod()][$args[0]->getPath()];
 
     // wrap response in an OAuth2\Response object
     $response = new \OAuth2\Response(new \Guzzle\Http\Message\Response($response['status'], $response['headers'], $response['body']));
 
-    // handle response
+    // Response handling
     if (in_array($response->status(), range(200, 299))) {
+      // Reset redirect count for future requests since we reached something
+      $this->client->options['redirect_count'] = 0;
+
       return $response;
     } else if (in_array($response->status(), range(300, 399))) {
-      $opts['redirect_count'] = isset($opts['redirect_count']) ? $opts['redirect_count'] : 0;
-      $opts['redirect_count'] += 1;
-      if ($opts['redirect_count'] > $this->client->options['max_redirects']) {
+      // Count redirects
+      $this->client->options['redirect_count'] = $this->client->options['redirect_count'] || 0;
+      $this->client->options['redirect_count'] += 1;
+      if ($this->client->options['redirect_count'] > $this->client->options['max_redirects']) {
         return $response;
       }
+
+      // Get vars to make the redirect
       if ($response->status() === 303) {
-        $args[0] = 'GET';
-        $opts['body'] = '';
+        $verb = 'GET';
+        $body = '';
       }
       $headers = $response->headers();
-      $location = $headers['location']->toArray();
-      return $this->client->request($args[0], $location[0], $opts);
+
+      // Create redirected request and get response
+      $request = $this->client->createRequest(isset($verb) ? $verb : $args[0]->getMethod(), $headers['location'], array(
+          'params'  => $args[0]->getQuery()
+        , 'headers' => $args[0]->getHeaders()
+        , 'body'    => isset($body) ? $body : $args[0]->getResponseBody()
+      ));
+      return $this->client->getResponse($request, $opts);
     } else if (in_array($response->status(), range(400, 599))) {
       $e = new \OAuth2\Error($response);
       if ($opts['raise_errors'] || $this->client->options['raise_errors']) {

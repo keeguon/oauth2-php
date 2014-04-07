@@ -8,7 +8,6 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
   protected $authCode      = null;
   protected $client        = null;
   protected $code          = 'sushi';
-  protected $facebookToken = '';
   protected $jsonToken     = '';
   protected $kvformToken   = '';
   protected $mode          = '';
@@ -20,7 +19,6 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
   {
     // set tokens
     $this->kvformToken   = 'expires_in=600&access_token=salmon&refresh_token=trout&extra_param=steve';
-    $this->facebookToken = preg_replace('/_in/i', '', $this->kvformToken);
     $this->jsonToken     = json_encode(array('expires_in' => 600, 'access_token' => 'salmon', 'refresh_token' => 'trout', 'extra_param' => 'steve'));
 
     // get client stub
@@ -63,10 +61,10 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
   */
   public function testGetToken()
   {
-    foreach(array('json', 'formencoded', 'from_facebook') as $mode) {
+    foreach(array('json', 'formencoded') as $mode) {
       // set mode
       $this->mode = $mode;
-      
+
       foreach (array('GET', 'POST') as $verb) {
         // set token_method and get token
         $this->client->options['token_method'] = $verb;
@@ -85,18 +83,15 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
       // returns AccessToken with $expires_in
       $this->assertEquals(600, $this->access->getExpiresIn());
 
-      // returns AccessToken with $expires_at
-      $this->assertInternalType('integer', $this->access->getExpiresAt());
-
       // returns AccessToken with params accessible via the params array
       $this->assertEquals('steve', $this->access->getParam('extra_param'));
     }
   }
 
  /**
-  * Intercept all OAuth2\Client::request() calls and mock their responses
+  * Intercept all OAuth2\Client::getResponse() calls and mock their responses
   */
-  public function mockRequest()
+  public function mockGetResponse()
   {
     // retrieve args
     $args = func_get_args();
@@ -105,7 +100,6 @@ class AuthCodeTest extends \OAuth2\Tests\TestCase
     $map = array(
         'formencoded'   => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->kvformToken)
       , 'json'          => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/json'), $this->jsonToken)
-      , 'from_facebook' => new \Guzzle\Http\Message\Response(200, array('Content-Type' => 'application/x-www-form-urlencoded'), $this->facebookToken)
     );
 
     return new \OAuth2\Response($map[$this->mode]);
