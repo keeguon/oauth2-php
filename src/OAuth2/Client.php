@@ -150,7 +150,7 @@ class Client
         $body->merge(['client_id' => $this->id, 'client_secret' => $this->secret]);
 
         // Replace body
-        $request->setBody(\GuzzleHttp\Stream::factory((string) $body));
+        $request->setBody(\GuzzleHttp\Stream\Stream::factory((string) $body));
       } else {
         throw new \Exception("Unknown client authentication method.");
       }
