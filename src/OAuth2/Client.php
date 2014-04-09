@@ -25,6 +25,7 @@ class Client
         'authorize_url' => '/oauth/authorize'
       , 'token_url'     => '/oauth/token'
       , 'token_method'  => 'POST'
+      , 'client_auth'   => 'header'
       , 'request_opts'  => [ 'exceptions' => true ]
     ], $opts);
 
@@ -134,7 +135,17 @@ class Client
     $request = $this->createRequest($this->options['token_method'], $this->tokenUrl(), $opts);
 
     // Set auth
-    $request->setHeader('Authorization', 'Basic ' . base64_encode("$this->id:$this->secret"));
+    if (isset($this->options['client_auth'])) {
+      if ($this->options['client_auth'] === 'header') {
+        $request->setHeader('Authorization', 'Basic ' . base64_encode("$this->id:$this->secret"));
+      } else if ($this->options['client_auth'] === 'query') {
+        $request->getQuery()->merge(['client_id' => $this->id, 'client_secret' => $this->secret]);
+      } else {
+        throw new \Exception("Unknown client authentication method.");
+      }
+    } else {
+      throw new \Exception("Missing client authentication method.");
+    }
 
     // Get response
     $response = $this->getResponse($request, $parseMode);

@@ -7,7 +7,7 @@ class Error extends \Exception
   protected $code     = 0;
   protected $message  = '';
   protected $response = null;
-  
+
  /**
   * Construct the OAuth 2 error using a response object
   *
