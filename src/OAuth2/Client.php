@@ -126,9 +126,11 @@ class Client
     $parseMode = isset($params['parse']) ? $params['parse'] : 'automatic';
     unset($params['parse']);
 
-    $opts['query'] = $params;
     if ($this->options['token_method'] === 'POST') {
       $opts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
+      $opts['body']    = $params;
+    } else {
+      $opts['query'] = $params;
     }
 
     // Create request
@@ -140,6 +142,15 @@ class Client
         $request->setHeader('Authorization', 'Basic ' . base64_encode("$this->id:$this->secret"));
       } else if ($this->options['client_auth'] === 'query') {
         $request->getQuery()->merge(['client_id' => $this->id, 'client_secret' => $this->secret]);
+      } else if ($this->options['client_auth'] === 'body') {
+        // Retrieve current body as a \Guzzle\Query object since we'll have to add client auth
+        $body = \GuzzleHttp\Query::fromString((string) $request->getBody());
+
+        // Add client auth
+        $body->merge(['client_id' => $this->id, 'client_secret' => $this->secret]);
+
+        // Replace body
+        $request->setBody(\GuzzleHttp\Stream::factory((string) $body));
       } else {
         throw new \Exception("Unknown client authentication method.");
       }
