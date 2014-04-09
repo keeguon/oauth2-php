@@ -19,14 +19,4 @@ class Base
     }
     $this->client = $client;
   }
-
- /**
-  * The OAuth client_id and client_secret
-  *
-  * @return array
-  */
-  public function clientParams()
-  {
-    return array('client_id' => $this->client->getId(), 'client_secret' => $this->client->getSecret());
-  }
 }

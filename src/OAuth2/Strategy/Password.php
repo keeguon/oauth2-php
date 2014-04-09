@@ -26,7 +26,7 @@ class Password extends \OAuth2\Strategy\Base
         'grant_type' => 'password'
       , 'username'   => $username
       , 'password'   => $password
-    ), $this->clientParams(), $params);
+    ), $params);
     return $this->client->getToken($params, $opts);
   }
 }

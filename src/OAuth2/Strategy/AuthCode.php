@@ -35,14 +35,14 @@ class AuthCode extends \OAuth2\Strategy\Base
   *
   * @param string $code   The Authorization Code value
   * @param array  $params Additional params
-  * @param array  $opts   Options 
+  * @param array  $opts   Options
   */
   public function getToken($code, $params = array(), $opts = array())
   {
     $params = array_merge(array(
         'grant_type' => 'authorization_code'
       , 'code'       => $code
-    ), $this->clientParams(), $params);
+    ), $params);
     return $this->client->getToken($params, $opts);
   }
 }
