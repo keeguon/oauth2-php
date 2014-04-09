@@ -173,9 +173,19 @@ class AccessToken
   */
   public function request($verb, $path, $opts = array())
   {
-    $opts    = $this->setToken($opts);
+    // Set parse mode
+    $parseMode = 'automatic';
+    if (isset($opts['parse'])) {
+      $parseMode = $opts['parse'];
+      unset($opts['parse']);
+    }
+
+    // Set token
+    $opts = $this->setToken($opts);
+
+    // Make request and return response
     $request = $this->client->createRequest($verb, $path, $opts);
-    return $this->client->getResponse($request);
+    return $this->client->getResponse($request, $parseMode);
   }
 
  /**
