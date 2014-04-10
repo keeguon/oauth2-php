@@ -181,10 +181,7 @@ class Client
     }
 
     // Make request
-    $request = $this->createRequest($this->options['token_method'], $this->tokenUrl(), array(
-        'params'  => $params
-      , 'headers' => isset($headers) ? $headers : array()
-    ));
+    $request = $this->createRequest($this->options['token_method'], $this->tokenUrl(), $requestOpts);
 
     // Set auth
     if (isset($this->options['client_auth'])) {
