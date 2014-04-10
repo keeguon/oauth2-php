@@ -25,6 +25,7 @@ class Client
         'authorize_url' => '/oauth/authorize'
       , 'token_url'     => '/oauth/token'
       , 'token_method'  => 'POST'
+      , 'client_auth'   => 'header'
       , 'request_opts'  => array()
       , 'max_redirects' => 5
       , 'raise_errors'  => true
@@ -90,16 +91,16 @@ class Client
   {
     // Set some default options
     $opts = array_merge(array(
-        'params'       => array()
-      , 'body'         => ''
-      , 'headers'      => array()
+        'query'   => array()
+      , 'headers' => array()
+      , 'body'    => ''
     ), $opts);
     $opts['request_opts'] = isset($opts['request_opts']) ? array_merge($this->options['request_opts'], $opts['request_opts']) : $this->options['request_opts'];
 
     // Create the request
     $verb    = (in_array($verb, array('GET', 'POST', 'HEAD', 'PUT', 'DELETE', 'OPTIONS', 'PATCH')) ? $verb : 'GET');
     $request = $this->connection->createRequest($verb, $uri, $opts['headers'], $opts['body'], $opts['request_opts']);
-    $request->getQuery()->merge($opts['params']);
+    $request->getQuery()->merge($opts['query']);
 
     return $request;
   }
@@ -171,8 +172,12 @@ class Client
     );
     unset($params['parse']);
 
+    $requestOpts = array();
     if ($this->options['token_method'] === 'POST') {
-      $headers = array('Content-Type' => 'x-www-form-urlencoded');
+      $requestOpts['headers'] = array('Content-Type' => 'x-www-form-urlencoded');
+      $requestOpts['body']    = $params;
+    } else {
+      $requestOpts['query'] = $params;
     }
 
     // Make request
@@ -180,7 +185,23 @@ class Client
         'params'  => $params
       , 'headers' => isset($headers) ? $headers : array()
     ));
-    $request->setAuth($this->id, $this->secret);
+
+    // Set auth
+    if (isset($this->options['client_auth'])) {
+      if ($this->options['client_auth'] === 'header') {
+        $request->setAuth($this->id, $this->secret);
+      } else if ($this->options['client_auth'] === 'query') {
+        $request->getQuery()->merge(array('client_id' => $this->id, 'client_secret' => $this->secret));
+      } else if ($this->options['client_auth'] === 'body') {
+        if (!in_array($request->getMethod(), array('GET', 'HEAD', 'TRACE', 'OPTIONS'))) {
+          $request->getBody()->addPostFields(array('client_id' => $this->id, 'client_secret' => $this->secret));
+        }
+      } else {
+        throw new \Exception("Unknown client authentication method.");
+      }
+    } else {
+      throw new \Exception("Missing client authentication method.");
+    }
 
     // Get response
     $response = $this->getResponse($request, $opts);
